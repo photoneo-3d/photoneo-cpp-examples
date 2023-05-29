@@ -1,6 +1,8 @@
 /* SPDX-License-Identifier:Unlicense */
 
 #include "common/PhoAravisCommon.h"
+#include "common/CalculatePointCloud.h"
+#include "common/CalculateNormals.h"
 #include <iomanip>
 
 using namespace pho;
@@ -19,6 +21,7 @@ void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, V
     std::cout << "CHUNK DATA buffer:" << std::endl;
 
     const float* depthMap = nullptr;
+    const NormalsAngles*  normalsAngles = nullptr;
 
     for(auto chunkId : chunkIds) {
         size_t dataSize = 0;
@@ -37,6 +40,7 @@ void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, V
             break;
         case OutputMat::NormalMap:
             std::cout << "NormalMap received\n";
+            normalsAngles = (NormalsAngles*)data;
             break;
         case OutputMat::ConfidenceMap:
             std::cout << "ConfidenceMap received\n";
@@ -53,17 +57,14 @@ void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, V
         }
     }
 
-    /* Calculate point cloud */
+    /* Calculate point cloud from depth map and reprojection map */
     if(depthMap && reprojectionMap) {
-        auto pointCloud = std::make_unique<Vec3D[]>(width * height);
-        for(uint32_t i = 0; i < width * height; ++i) {
-            const float& depth = depthMap[i];
-            const Vec2D r = reprojectionMap[i];
-            Vec3D& p = pointCloud[i];
-            p.x = r.x * depth;
-            p.y = r.y * depth;
-            p.z = depth;
-        }
+        auto pointCloud = pho::calculatePointCloud(depthMap, reprojectionMap, width, height);
+    }
+
+    /* Calculate normals from normal angles */
+    if(normalsAngles) {
+        auto normals = pho::calculateNormals(normalsAngles, width, height);
     }
 
     std::cout << "-------------------------------" << std::endl;
@@ -187,7 +188,7 @@ int main (int argc, char **argv)
         }
 
         /* If NormalMap is enabled, check custom setting NormalsEstimationRadius and if value is 0 set to 1 (range: 1-4) */
-        if(output.first == NormalMap && output.second == true) {
+        if(output.first == NormalMap && output.second) {
             auto radius = arv_camera_get_integer(camera.get(), "NormalsEstimationRadius", &error);
             if(error) {
                 std::cerr << "Error: Failed to get NormalsEstimationRadius!" << std::endl;

@@ -7,9 +7,11 @@ extern "C" {
 
 #include <memory>
 #include <iostream>
+#include <vector>
 
 namespace pho {
 
+#pragma pack(push,1)
 struct Vec2D {
     float x;
     float y;
@@ -20,6 +22,12 @@ struct Vec3D {
     float y;
     float z;
 };
+
+struct NormalsAngles {
+    uint8_t x;
+    uint8_t y;
+};
+#pragma pack(pop)
 
 enum TriggerMode { Freerun = 0, SWTrigger = 1 };
 
