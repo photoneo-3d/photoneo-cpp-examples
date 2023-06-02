@@ -45,3 +45,8 @@ generate_example_app(GenICamSettings
         GenICamSettings/ReadWriteHelpers.cpp
         GenICamSettings/ReadWriteHelpers.h
 )
+
+generate_example_app(IPSettings
+    SOURCES
+        IPSettings/main.cpp
+)
