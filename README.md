@@ -11,7 +11,7 @@ You may start your development based on one of the examples and modify it to sui
 
 
 #### Support
-Visit [www.photoneo.com](https://www.photoneo.com/) for the most up-to-date information and documents. If you encounter any issues while using the examples, please do not hesitate to contact our dedicated Support team via our [service desk](https://photoneo.atlassian.net/servicedesk/customer/portal/3/group/3/create/15) for prompt assistance.
+Visit [www.photoneo.com](https://www.photoneo.com/) for the most up-to-date information and documents. If you encounter any issues while using the examples, please do not hesitate to contact our dedicated Support team at our [Help Center](https://www.photoneo.com/Help-Center) for prompt assistance.
 
 #### License
 Photoneo examples are distributed under the [BSD License](https://github.com/photoneo-3d/photoneo-cpp-examples/blob/main/LICENSE).
