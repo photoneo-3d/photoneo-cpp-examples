@@ -119,8 +119,8 @@ it may contain data with lower bit depth depending on the chosen source.
 
 When `Color` is selected as `TextureSource` on an appropriate device, the
 `Intensity` component contains the color texture. The data is still transferred
-using `Mono16` as pixel format, however it uses a custom YCoCg encoding which
-encodes the color data in the lowest bits of the intensity. See
+using `Mono16` as pixel format, however it uses a YCoCg-R encoding which encodes
+the subsampled chromatic channels in the lowest bits of the _intensity_. See
 [`common/YCoCg.h`](https://github.com/photoneo-3d/photoneo-cpp-examples/blob/main/GigEV/aravis/common/YCoCg.h)
 in C++ examples for more details on the encoding and an example implementation.
 
