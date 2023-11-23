@@ -38,6 +38,9 @@ private:
 	void PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation);
 	void PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix);
 	void PrintVector(const std::string &name, const pho::api::Point3_64f &vector);
+    void PrintVirtualCamera(const std::string &Name, const pho::api::PhoXiVirtualCamera &camera);
+    void PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings);
+    void PrintDistortionCoefficients(const std::string &name, const std::vector<double> &distCoeffs);
 
 	template<class T>
 	bool ReadLine(T &Output) const
@@ -61,7 +64,7 @@ public:
 
 void ChangeSettingsExample::ConnectPhoXiDeviceBySerialExample()
 {
-	std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'YYYY-MM-###-LC#'): ";
+	std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'XXX-YYY'): ";
 	std::string HardwareIdentification;
 	if (!ReadLine(HardwareIdentification))
 	{
@@ -319,6 +322,9 @@ void ChangeSettingsExample::ChangeCoordinatesSettingsExample() {
 	//Recognize Markers values: 0 / 1 or false / true (0 is OFF, 1 is ON)
 	PhoXiDevice->CoordinatesSettings->RecognizeMarkers = 0;
 
+	//Save Transformations values: 0 / 1 or false / true (0 is OFF, 1 is ON)
+	PhoXiDevice->CoordinatesSettings->SaveTransformations = 0;
+
 	//Pattern Scale values: 0.0 - 1.0 (scale 1.0 x 1.0 is normal size)
 	PhoXiDevice->CoordinatesSettings->MarkersSettings.MarkerScale = pho::api::PhoXiSize_64f(0.5, 0.5);
 
@@ -427,10 +433,13 @@ void ChangeSettingsExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordi
 	PrintVector("RobotTranslationVector", CoordinatesSettings.RobotTransformation.Translation);
 	std::cout << "    CoordinateSpace: " << std::string(CoordinatesSettings.CoordinateSpace) << std::endl;
 	std::cout << "    RecognizeMarkers: " << CoordinatesSettings.RecognizeMarkers << std::endl;
+	std::cout << "    SaveTransformations: " << CoordinatesSettings.SaveTransformations << std::endl;
 	std::cout << "    MarkerScale: "
 		<< CoordinatesSettings.MarkersSettings.MarkerScale.Width << " x "
 		<< CoordinatesSettings.MarkersSettings.MarkerScale.Height
 		<< std::endl;
+    std::cout << "CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
+    PrintVirtualCamera("CurrentCamera", CoordinatesSettings.CurrentCamera);
 }
 
 void ChangeSettingsExample::PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string& source)
@@ -443,45 +452,25 @@ void ChangeSettingsExample::PrintCalibrationSettings(const pho::api::PhoXiCalibr
 		<< CalibrationSettings.PixelSize.Height
 		<< std::endl;
 	PrintMatrix("CameraMatrix", CalibrationSettings.CameraMatrix);
-	std::cout << "    DistortionCoefficients: " << std::endl;
-	std::cout << "      Format is the following: " << std::endl;
-	std::cout << "      (k1, k2, p1, p2[, k3[, k4, k5, k6[, s1, s2, s3, s4[, tx, ty]]]])" << std::endl;
-
-	std::vector<double> distCoeffs = CalibrationSettings.DistortionCoefficients;
-	std::stringstream currentDistCoeffsSS;
-	int brackets = 0;
-	currentDistCoeffsSS << "(";
-	currentDistCoeffsSS << distCoeffs[0];
-	for (size_t i = 1; i < distCoeffs.size(); ++i)
-	{
-		if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14)
-		{
-			currentDistCoeffsSS << "[";
-			++brackets;
-		}
-		currentDistCoeffsSS << ", " << distCoeffs[i];
-	}
-	for (int j = 0; j < brackets; ++j)
-	{
-		currentDistCoeffsSS << "]";
-	}
-	currentDistCoeffsSS << ")";
-	std::cout << "      " << currentDistCoeffsSS.str() << std::endl;
+	PrintDistortionCoefficients("DistortionCoefficients", CalibrationSettings.DistortionCoefficients);
 }
 
-void ChangeSettingsExample::PrintAdditionalCalibrationSettings(const pho::api::PhoXiAdditionalCameraCalibration &CalibrationSettings, const std::string& source) {
+void ChangeSettingsExample::PrintAdditionalCalibrationSettings(const pho::api::PhoXiAdditionalCameraCalibration &CalibrationSettings, const std::string& source)
+{
 	std::cout << "Additional camera calibration settings: " << source << std::endl;
 	PrintCalibrationSettings(CalibrationSettings.CalibrationSettings, source);
 	PrintResolution(CalibrationSettings.CameraResolution);
 	PrintCoordinateTransformation(CalibrationSettings.CoordinateTransformation);
 }
 
-void ChangeSettingsExample::PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation) {
+void ChangeSettingsExample::PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation)
+{
 	PrintMatrix("RotationMatrix", transformation.Rotation);
 	PrintVector("TranslationVector", transformation.Translation);
 }
 
-void ChangeSettingsExample::PrintResolution(const pho::api::PhoXiSize& Resolution) {
+void ChangeSettingsExample::PrintResolution(const pho::api::PhoXiSize& Resolution)
+{
 	std::cout << "    Resolution: ("
 		<< Resolution.Width
 		<< "x"
@@ -496,6 +485,44 @@ void ChangeSettingsExample::PrintVector(const std::string &name, const pho::api:
 		<< vector.y << "; "
 		<< vector.z << "]"
 		<< std::endl;
+}
+
+void ChangeSettingsExample::PrintVirtualCamera(const std::string &name, const pho::api::PhoXiVirtualCamera &camera) {
+        std::cout << "    " << name << ":" << std::endl;
+        std::cout << "    ProjectionMode: " << std::string(camera.ProjectionMode) << std::endl;
+        std::cout << "    OrthogonalSettings: " << camera.OrthogonalSettings.Width << " x " << camera.OrthogonalSettings.Height << std::endl;
+        std::cout << "    Resolution: " << camera.Resolution.Width << " x " << camera.Resolution.Height << std::endl;
+        std::cout << "CoordinateTransformation:" << std::endl;
+        PrintCoordinateTransformation(camera.WorldToCameraCoordinates);
+        PrintPerspectiveSettings(camera.PerspectiveSettings);
+}
+
+void ChangeSettingsExample::PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings) {
+        PrintMatrix("PerspectiveSettings", settings.CameraMatrix);
+        PrintDistortionCoefficients("DistortionCoefficients", settings.DistortionCoefficients);
+}
+
+void ChangeSettingsExample::PrintDistortionCoefficients(const std::string &name, const std::vector<double> &distCoeffs) {
+        std::cout << "    " << name << ": " << std::endl;
+        std::cout << "      Format is the following: " << std::endl;
+        std::cout << "      (k1, k2, p1, p2[, k3[, k4, k5, k6[, s1, s2, s3, s4[, tx, ty]]]])" << std::endl;
+
+        std::stringstream currentDistCoeffsSS;
+        int brackets = 0;
+        currentDistCoeffsSS << "(";
+        currentDistCoeffsSS << distCoeffs[0];
+        for (size_t i = 1; i < distCoeffs.size(); ++i) {
+                if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14) {
+                        currentDistCoeffsSS << "[";
+                        ++brackets;
+                }
+                currentDistCoeffsSS << ", " << distCoeffs[i];
+        }
+        for (int j = 0; j < brackets; ++j) {
+                currentDistCoeffsSS << "]";
+        }
+        currentDistCoeffsSS << ")";
+        std::cout << "      " << currentDistCoeffsSS.str() << std::endl;
 }
 
 void ChangeSettingsExample::PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix)

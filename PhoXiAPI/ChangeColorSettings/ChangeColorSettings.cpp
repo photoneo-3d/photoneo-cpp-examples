@@ -40,14 +40,14 @@ private:
 	}
 
 public:
-	ColorAPIExample() {};
-	~ColorAPIExample() {};
+	ColorAPIExample() = default;;
+	~ColorAPIExample() = default;;
 	void Run();
 };
 
 void ColorAPIExample::ConnectPhoXiDeviceBySerialExample()
 {
-	std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'YYYY-MM-###-LC#'): ";
+	std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'XXX-YYY'): ";
 	std::string HardwareIdentification;
 	if (!ReadLine(HardwareIdentification))
 	{
@@ -80,7 +80,7 @@ void ColorAPIExample::ChangeColorSettingsExample()
 
 	//Retrieving the current ColorSettings
 	const pho::api::PhoXiColorSettings CurrentColorSettings = PhoXiDevice->ColorSettings;
-	//Check if the Current Color Settings have been retrieved succesfully
+	//Check if the Current Color Settings have been retrieved successfully
 	if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
 		throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
 	}
@@ -112,14 +112,14 @@ void ColorAPIExample::ChangeColorSettingsExample()
 
 	//Get all SupportedColorCapturingModes
 	std::vector<pho::api::PhoXiCapturingMode> CapturingModes = PhoXiDevice->SupportedColorCapturingModes;
-	//Check if the SupportedColorCapturingModes have been retrieved succesfully
+	//Check if the SupportedColorCapturingModes have been retrieved successfully
 	if (!PhoXiDevice->SupportedColorCapturingModes.isLastOperationSuccessful())
 	{
 		throw std::runtime_error(PhoXiDevice->SupportedColorCapturingModes.GetLastErrorMessage().c_str());
 	}
 	//Pick a capturing mode
 	PhoXiDevice->ColorSettings->CapturingMode = CapturingModes[0];
-	//Check if the Resolution (SupportedColorCapturingModes) has been changed succesfully
+	//Check if the Resolution (SupportedColorCapturingModes) has been changed successfully
 	if (!PhoXiDevice->CapturingMode.isLastOperationSuccessful())
 	{
 		throw std::runtime_error(PhoXiDevice->CapturingMode.GetLastErrorMessage().c_str());
@@ -127,14 +127,14 @@ void ColorAPIExample::ChangeColorSettingsExample()
 
 	//Get all SupportedColorWhiteBalancePresets
 	std::vector<std::string> WhiteBalancePresets = PhoXiDevice->SupportedColorWhiteBalancePresets;
-	//Check if the SupportedColorWhiteBalancePresets have been retrieved succesfully
+	//Check if the SupportedColorWhiteBalancePresets have been retrieved successfully
 	if (!PhoXiDevice->SupportedColorWhiteBalancePresets.isLastOperationSuccessful())
 	{
 		throw std::runtime_error(PhoXiDevice->SupportedColorWhiteBalancePresets.GetLastErrorMessage().c_str());
 	}
 	//pick a white balance preset
 	PhoXiDevice->ColorSettings->WhiteBalance.Preset = WhiteBalancePresets[0];
-	//Check if the white balance has been changed succesfully
+	//Check if the white balance has been changed successfully
 	if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful())
 	{
 		throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
@@ -143,11 +143,23 @@ void ColorAPIExample::ChangeColorSettingsExample()
 	//set RGB values for white balance (R,G,B)
 	pho::api::Point3_64f rgb(0.5, 0.5, 0.7);
 	PhoXiDevice->ColorSettings->WhiteBalance.BalanceRGB = rgb;
-	//Check if the white balance has been changed succesfully
+	//Check if the white balance has been changed successfully
 	if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful())
 	{
 		throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
 	}
+
+	// Change the RemoveFalseColors settings
+    PhoXiDevice->ColorSettings->RemoveFalseColors = !CurrentColorSettings.RemoveFalseColors;
+	if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+		throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+	}
+
+	// Change the Gamma settings
+        PhoXiDevice->ColorSettings->Gamma = CurrentColorSettings.Gamma * 1.2;
+        if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+            throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+        }
 
 	std::cout << "Settings after set up:" << std::endl;
 	PrintColorSettings(PhoXiDevice->ColorSettings);
@@ -241,6 +253,7 @@ void ColorAPIExample::PrintColorSettings(const pho::api::PhoXiColorSettings &Col
 	std::cout << "  ColorSettings: " << std::endl;
 	std::cout << "    Iso:                " << ColorSettings.Iso << std::endl;
 	std::cout << "    Exposure:           " << ColorSettings.Exposure << std::endl;
+	std::cout << "    RemoveFalseColors:  " << ColorSettings.RemoveFalseColors << std::endl;
 	std::cout << "    Resolution: Width:  " << ColorSettings.CapturingMode.Resolution.Width << std::endl;
 	std::cout << "                Height: " << ColorSettings.CapturingMode.Resolution.Height << std::endl;
 	std::cout << "    WhiteBalancePreset: " << ColorSettings.WhiteBalance.Preset << std::endl;

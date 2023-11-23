@@ -8,7 +8,7 @@ namespace pho {
 /**
  * Utility class providing conversion function for images.
  * Provides conversion
- *     BGR  <--> YCoCg-R 4:2:0,
+ *     BGR  <--> YCoCg 4:2:0,
  * where the chromatic channels Co, Cg are subsampled in half resolution.
  * The 2x2 plaquette of the YCoCg format consists of:
  *   (0, 0): Y (10 bits), 1st half of Co (6 bits)
@@ -18,12 +18,11 @@ namespace pho {
  *
  * Black pixels are treated specially in order to prevent artifacts in images containing valid pixels only in a subregion.
  *
- * NOTE: The YCoCg-R format used here differs from the YCoCg by:
+ * NOTE: The YCoCg format used here differs from the reference by:
  *        - a factor 2 in the both chromatic channels Co, Cg,
- *        - an offset equal to 2^pixelDepth, which is added to Co and Cg to prevent negative values.
+ *        - an offset equal to the saturation value, which is added to Co and Cg to prevent negative values.
  *
  * @see https://en.wikipedia.org/wiki/YCoCg
- * @see https://glenwing.github.io/docs/VESA-DSC-1.2.pdf (encoding: 6.1, decoding: 7.7)
  */
 class YCoCg {
 public:

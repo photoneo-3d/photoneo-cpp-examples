@@ -7,6 +7,7 @@
 #include <string>
 #include <iostream>
 #include <sstream>
+#include <fstream>
 
 #include "PhoXi.h"
 
@@ -19,7 +20,9 @@ void printCalibParams(pho::api::PPhoXi &PhoXiDevice);
 //Print out calibration parameters
 void printFrameCalibParams(pho::api::PPhoXi &PhoXiDevice);
 //Print out scanning volume information
-void printScanningVolumes(pho::api::PPhoXi& PhoXiDevice);
+void printScanningVolume(pho::api::PPhoXi& PhoXiDevice);
+// Save the scanning volume mesh in the Geomview Object File Format (.OFF)
+void saveScanningVolumeMesh(pho::api::PPhoXi &PhoXiDevice);
 //Print out a 3x3 matrix with a given name
 void printMatrix(const std::string &Name, const pho::api::CameraMatrix64f &Matrix);
 // print out the distortion coefficients
@@ -85,7 +88,10 @@ int main(int argc, char *argv[])
         }
     }
     //Print out scanning volume information
-    printScanningVolumes(PhoXiDevice);
+    printScanningVolume(PhoXiDevice);
+
+    //Save scanning volume information
+    saveScanningVolumeMesh(PhoXiDevice);
 
     //Print out calibration parameters from the frame
     printFrameCalibParams(PhoXiDevice);
@@ -224,7 +230,7 @@ void printDistortionCoefficients(const std::string &name, const std::vector<doub
     std::cout << "    " << currentDistCoeffsSS.str() << std::endl;
 }
 
-void printScanningVolumes(pho::api::PPhoXi& PhoXiDevice)
+void printScanningVolume(pho::api::PPhoXi& PhoXiDevice)
 {
     // Scanning volume for the motion camera devices is available after triggering the first frame
     if (PhoXiDevice->GetType() == pho::api::PhoXiDeviceType::MotionCam3D) {
@@ -310,6 +316,71 @@ void printScanningVolumes(pho::api::PPhoXi& PhoXiDevice)
                       << mesh.Vertices[mesh.Indices[meshVerticesIdx + 2]].z << "], ";
         }
         std::cout << "]" << std::endl;
+    }
+}
+
+// https://people.sc.fsu.edu/~jburkardt/data/off/off.html
+// OFF Files (Geomview Object File Format)
+// OFF is a data directory which contains examples of OFF files.
+// An OFF file is good for storing a description a 2D or 3D object constructed from polygons.
+// There is even a simple extension which can handle objects in 4D.
+//  While there are many variations and extensions of the OFF format, the simplest files have the following structure:
+// Format:
+// Line 1
+//     OFF
+// Line 2
+//     vertex_count face_count edge_count
+// One line for each vertex:
+//     x y z
+//     for vertex 0, 1, ..., vertex_count-1
+// One line for each polygonal face:
+//     n v1 v2 ... vn,
+//     the number of vertices, and the vertex indices for each face.
+//
+// This file can be opened in the CloudCompare tool.
+void saveScanningVolumeMesh(pho::api::PPhoXi &PhoXiDevice) {
+    const std::string offFilepath = "ScanningVolumeMesh.off";
+    std::ofstream offFile(offFilepath);
+    if (!offFile.is_open()) {
+        std::cout << "Can't open " << offFilepath << " for writing!" << std::endl;
+        return;
+    }
+
+    // Scanning volume for the motion camera devices is available after triggering the first frame
+    if (PhoXiDevice->GetType() == pho::api::PhoXiDeviceType::MotionCam3D) {
+        int id = PhoXiDevice->TriggerFrame();
+        if (id >= 0) {
+            auto frame = PhoXiDevice->GetSpecificFrame(id);
+            frame && frame->Empty();
+        }
+    }
+
+    pho::api::PhoXiScanningVolume ScanningVolume = PhoXiDevice->ScanningVolume;
+    const pho::api::PhoXiMesh &Mesh = ScanningVolume.Mesh;
+
+    const std::vector<pho::api::Point3_64f> &vertices = Mesh.Vertices;
+    const std::vector<unsigned int> &indices = Mesh.Indices;
+    std::vector<std::vector<int>> Faces;
+    std::vector<int> *Face;
+    for (size_t i = 0; i < indices.size(); i++) {
+        if ((i % 3) == 0) {
+            Faces.push_back({});
+            Face = &Faces.back();
+        }
+        Face->push_back(indices[i]);
+    }
+    offFile << "OFF\n";
+    offFile << vertices.size() << " " << Faces.size() << " " << 0 << "\n";
+
+    for (auto &vertex : vertices) {
+        offFile << vertex.x << " " << vertex.y << " " << vertex.z << "\n";
+    }
+    for (auto &f : Faces) {
+        offFile << f.size() << " ";
+        for (auto index : f) {
+            offFile << index << " ";
+        }
+        offFile << "\n";
     }
 }
 

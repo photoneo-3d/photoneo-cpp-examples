@@ -97,7 +97,7 @@ In MarkersPositions.txt write markers positions (all the marker patterns with
 their corresponding marker positions can be accessed directly from Phoxi
 Control (starting with version 1.2.13), in the menu under Tools and then folder
 patterns_with_metadata or they can be downloaded from
-www.photoneo.com/files/markerPattern/marker_patterns_2019-09.rar).
+https://www.photoneo.com/dl/markerpatternsandmetadata-REV-23A).
 
 
 Connect to a scanner:

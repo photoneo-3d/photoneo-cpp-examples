@@ -43,7 +43,7 @@ public:
 };
 
 void ApplyCustomProjectionExample::ConnectPhoXiDeviceBySerial() {
-    std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'YYYY-MM-###-LC#'): ";
+    std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'XXX-YYY'): ";
     std::string HardwareIdentification;
     if (!ReadLine(HardwareIdentification)) {
         std::cout << "Incorrect input!" << std::endl;

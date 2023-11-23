@@ -39,6 +39,7 @@ class FullAPIExample
     void ConnectPhoXiDeviceExample();
     void ConnectPhoXiDeviceBySerialExample();
     void ConnectPhoXiDeviceByPhoXiDeviceInformationEntryExample();
+    void ConnectPhoXiDeviceByIPAddress();
     void ConnectFirstAttachedPhoXiDeviceExample();
     void ConnectPhoXiFileCameraExample();
     void BasicDeviceStateExample();
@@ -61,6 +62,8 @@ class FullAPIExample
     void PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation);
     void PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix);
     void PrintVector(const std::string &name, const pho::api::Point3_64f &vector);
+    void PrintVirtualCamera(const std::string &Name, const pho::api::PhoXiVirtualCamera &camera);
+    void PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings);
     void PrintDistortionCoefficients(const std::string &name, const std::vector<double> & distCoeffs);
 
     template<class T>
@@ -124,9 +127,10 @@ void FullAPIExample::ConnectPhoXiDeviceExample()
         std::cout << "Please enter the number of the way to connect to your device from this possibilities:" << std::endl;
         std::cout << "  1. Connect by Hardware Identification Number" << std::endl;
         std::cout << "  2. Connect by Index listed from GetDeviceList call" << std::endl;
-        std::cout << "  3. Connect first device Attached to PhoXi Control - if any" << std::endl;
-        std::cout << "  4. Connect to file camera in folder: " << FileCameraFolder << std::endl << std::endl;
-        std::cout << "  5. Refresh GetDeviceList" << std::endl << std::endl;
+        std::cout << "  3. Connect by IP address" << std::endl;
+        std::cout << "  4. Connect first device Attached to PhoXi Control - if any" << std::endl;
+        std::cout << "  5. Connect to file camera in folder: " << FileCameraFolder << std::endl;
+        std::cout << "  6. Refresh GetDeviceList" << std::endl << std::endl;
         std::cout << "Please enter the choice: ";
 
         std::size_t Index;
@@ -145,12 +149,15 @@ void FullAPIExample::ConnectPhoXiDeviceExample()
                 ConnectPhoXiDeviceByPhoXiDeviceInformationEntryExample();
                 break;
             case 3:
-                ConnectFirstAttachedPhoXiDeviceExample();
+                ConnectPhoXiDeviceByIPAddress();
                 break;
             case 4:
-                ConnectPhoXiFileCameraExample();
+                ConnectFirstAttachedPhoXiDeviceExample();
                 break;
             case 5:
+                ConnectPhoXiFileCameraExample();
+                break;
+            case 6:
                 GetAvailableDevicesExample();
                 break;
             default:
@@ -219,6 +226,61 @@ void FullAPIExample::ConnectPhoXiDeviceByPhoXiDeviceInformationEntryExample()
     else
     {
         std::cout << "Connection to the device " << DeviceList[Index].HWIdentification << " was Unsuccessful!" << std::endl;
+    }
+}
+
+void FullAPIExample::ConnectPhoXiDeviceByIPAddress()
+{
+    std::cout << std::endl << "Please enter device type:" << std::endl;
+    std::cout << "  1. PhoXi Scanner" << std::endl;
+    std::cout << "  2. PhoXi MotionCam3D" << std::endl;
+    std::cout << "Please enter your choice: ";
+    int type = 0;
+    if (!ReadLine(type))
+    {
+        std::cout << "Incorrect input!" << std::endl;
+        return;
+    }
+
+    std::string deviceType;
+    using PhoXiDeviceType = pho::api::PhoXiDeviceType;
+    switch(type)
+    {
+        case 1:
+            deviceType = static_cast<std::string>(PhoXiDeviceType(PhoXiDeviceType::PhoXiScanner));
+            break;
+        case 2:
+            deviceType = static_cast<std::string>(PhoXiDeviceType(PhoXiDeviceType::MotionCam3D));
+            break;
+        default:
+            std::cout << "Incorrect input!" << std::endl;
+            return;
+    }
+
+    std::cout << std::endl << "Please enter new device ID: ";
+    std::string HWIdentification;
+    if (!ReadLine(HWIdentification))
+    {
+        std::cout << "Incorrect input!" << std::endl;
+        return;
+    }
+
+    std::cout << std::endl << "Please enter the IP (v4 or v6) address: ";
+    std::string Ip;
+    if (!ReadLine(Ip))
+    {
+        std::cout << "Incorrect input!" << std::endl;
+        return;
+    }
+
+    PhoXiDevice = Factory.CreateAndConnect(HWIdentification, deviceType, Ip);
+    if (PhoXiDevice)
+    {
+        std::cout << "Connection to the device " << HWIdentification << " at " << Ip << " was Successful!" << std::endl;
+    }
+    else
+    {
+        std::cout << "Connection to the device " << HWIdentification << " at " << Ip << " was Unsuccessful!" << std::endl;
     }
 }
 
@@ -1109,10 +1171,13 @@ void FullAPIExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinatesSe
     PrintVector("RobotTranslationVector", CoordinatesSettings.RobotTransformation.Translation);
     std::cout << "    CoordinateSpace: "   << std::string(CoordinatesSettings.CoordinateSpace) << std::endl;
     std::cout << "    RecognizeMarkers: "  << CoordinatesSettings.RecognizeMarkers << std::endl;
+    std::cout << "    SaveTransformations: " << CoordinatesSettings.SaveTransformations << std::endl;
     std::cout << "    MarkerScale: "
         << CoordinatesSettings.MarkersSettings.MarkerScale.Width << " x "
         << CoordinatesSettings.MarkersSettings.MarkerScale.Height
         << std::endl;
+    std::cout << "CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
+    PrintVirtualCamera("CurrentCamera", CoordinatesSettings.CurrentCamera);
 }
 
 void FullAPIExample::PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string &source)
@@ -1182,6 +1247,23 @@ void FullAPIExample::PrintMatrix(const std::string &name, const pho::api::Camera
             << matrix[2][2] << "]"
             << std::endl;
     }
+}
+
+void FullAPIExample::PrintVirtualCamera(const std::string &name, const pho::api::PhoXiVirtualCamera &camera)
+{
+    std::cout << "    " << name << ":" << std::endl;
+    std::cout << "    ProjectionMode: " << std::string(camera.ProjectionMode) << std::endl;
+    std::cout << "    OrthogonalSettings: " << camera.OrthogonalSettings.Width << " x " << camera.OrthogonalSettings.Height << std::endl;
+    std::cout << "    Resolution: " << camera.Resolution.Width << " x " << camera.Resolution.Height << std::endl;
+    std::cout << "CoordinateTransformation:" << std::endl;
+    PrintCoordinateTransformation(camera.WorldToCameraCoordinates);
+    PrintPerspectiveSettings(camera.PerspectiveSettings);
+}
+
+void FullAPIExample::PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings)
+{
+    PrintMatrix("PerspectiveSettings", settings.CameraMatrix);
+    PrintDistortionCoefficients("DistortionCoefficients", settings.DistortionCoefficients);
 }
 
 void FullAPIExample::PrintDistortionCoefficients(const std::string& name, const std::vector<double>& distCoeffs)

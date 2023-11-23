@@ -43,6 +43,9 @@ class MotionCamExample {
     void PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation &transformation) const;
     void PrintMatrix(const std::string &Name, const pho::api::CameraMatrix64f &Matrix) const;
     void PrintVector(const std::string &Name, const pho::api::Point3_64f &Vector) const;
+    void PrintVirtualCamera(const std::string &Name, const pho::api::PhoXiVirtualCamera &camera) const;
+    void PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings) const;
+    void PrintDistortionCoefficients(const std::string &Name, const std::vector<double> &coeff) const;
 
     template<class T>
     bool ReadLine(T &Output) const {
@@ -63,7 +66,7 @@ class MotionCamExample {
 };
 
 void MotionCamExample::ConnectPhoXiDeviceBySerialExample() {
-    std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'YYYY-MM-###-LC#'): ";
+    std::cout << std::endl << "Please enter the Hardware Identification Number (for example 'XXX-YYY'): ";
     std::string HardwareIdentification;
     if (!ReadLine(HardwareIdentification)) {
         std::cout << "Incorrect input!" << std::endl;
@@ -168,7 +171,7 @@ void MotionCamExample::ChangeMotionCamCameraModeExample() {
     //SamplingTopology values: Standard
     CurrentCameraMode.SamplingTopology = pho::api::PhoXiSamplingTopology::Standard;
 
-    //OutputTopology values: Raw / Irregular grid / Regular grid
+    //OutputTopology values: Raw / Irregular grid / Regular grid / Full grid
     CurrentCameraMode.OutputTopology = pho::api::PhoXiOutputTopology::Raw;
 
     //CodingStrategy values: Normal / Interreflections
@@ -512,6 +515,13 @@ void MotionCamExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinates
     PrintVector("RobotTranslationVector", CoordinatesSettings.RobotTransformation.Translation);
     std::cout << "    CoordinateSpace: " << std::string(CoordinatesSettings.CoordinateSpace) << std::endl;
     std::cout << "    RecognizeMarkers: " << CoordinatesSettings.RecognizeMarkers << std::endl;
+    std::cout << "    SaveTransformations: " << CoordinatesSettings.SaveTransformations << std::endl;
+    std::cout << "    MarkerScale: "
+        << CoordinatesSettings.MarkersSettings.MarkerScale.Width << " x "
+        << CoordinatesSettings.MarkersSettings.MarkerScale.Height
+        << std::endl;
+    std::cout << "CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
+    PrintVirtualCamera("CurrentCamera", CoordinatesSettings.CurrentCamera);
 }
 
 void MotionCamExample::PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string& source) const
@@ -525,27 +535,7 @@ void MotionCamExample::PrintCalibrationSettings(const pho::api::PhoXiCalibration
         << CalibrationSettings.PixelSize.Height
         << std::endl;
     PrintMatrix("CameraMatrix", CalibrationSettings.CameraMatrix);
-    std::cout << "    DistortionCoefficients: " << std::endl;
-    std::cout << "      Format is the following: " << std::endl;
-    std::cout << "      (k1, k2, p1, p2[, k3[, k4, k5, k6[, s1, s2, s3, s4[, tx, ty]]]])" << std::endl;
-
-    std::vector<double> distCoeffs = CalibrationSettings.DistortionCoefficients;
-    std::stringstream currentDistCoeffsSS;
-    int brackets = 0;
-    currentDistCoeffsSS << "(";
-    currentDistCoeffsSS << distCoeffs[0];
-    for (int i = 1; i < distCoeffs.size(); ++i) {
-        if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14) {
-            currentDistCoeffsSS << "[";
-            ++brackets;
-        }
-        currentDistCoeffsSS << ", " << distCoeffs[i];
-    }
-    for (int j = 0; j < brackets; ++j) {
-        currentDistCoeffsSS << "]";
-    }
-    currentDistCoeffsSS << ")";
-    std::cout << "      " << currentDistCoeffsSS.str() << std::endl;
+    PrintDistortionCoefficients("DistortionCoefficients", CalibrationSettings.DistortionCoefficients);
 }
 
 void MotionCamExample::PrintAdditionalCalibrationSettings(const pho::api::PhoXiAdditionalCameraCalibration& CalibrationSettings, const std::string& source) const {
@@ -574,6 +564,46 @@ void MotionCamExample::PrintVector(const std::string &name, const pho::api::Poin
         << vector.y << "; "
         << vector.z << "]"
         << std::endl;
+}
+
+void MotionCamExample::PrintVirtualCamera(const std::string &name, const pho::api::PhoXiVirtualCamera &camera) const {
+    std::cout << "    " << name << ":" << std::endl;
+    std::cout << "    ProjectionMode: " << std::string(camera.ProjectionMode) << std::endl;
+    std::cout << "    OrthogonalSettings: " << camera.OrthogonalSettings.Width << " x " << camera.OrthogonalSettings.Height
+              << std::endl;
+    std::cout << "    Resolution: " << camera.Resolution.Width << " x " << camera.Resolution.Height
+              << std::endl;
+    std::cout << "CoordinateTransformation:" << std::endl;
+    PrintCoordinateTransformation(camera.WorldToCameraCoordinates);
+    PrintPerspectiveSettings(camera.PerspectiveSettings);
+}
+
+void MotionCamExample::PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings) const {
+    PrintMatrix("PerspectiveSettings", settings.CameraMatrix);
+    PrintDistortionCoefficients("DistortionCoefficients",  settings.DistortionCoefficients);
+}
+
+void MotionCamExample::PrintDistortionCoefficients(const std::string &name, const std::vector<double> &distCoeffs) const {
+     std::cout << "    " << name << ": " << std::endl;
+     std::cout << "      Format is the following: " << std::endl;
+     std::cout << "      (k1, k2, p1, p2[, k3[, k4, k5, k6[, s1, s2, s3, s4[, tx, ty]]]])" << std::endl;
+
+     std::stringstream currentDistCoeffsSS;
+     int brackets = 0;
+     currentDistCoeffsSS << "(";
+     currentDistCoeffsSS << distCoeffs[0];
+     for (int i = 1; i < distCoeffs.size(); ++i) {
+        if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14) {
+            currentDistCoeffsSS << "[";
+            ++brackets;
+        }
+        currentDistCoeffsSS << ", " << distCoeffs[i];
+     }
+     for (int j = 0; j < brackets; ++j) {
+        currentDistCoeffsSS << "]";
+     }
+     currentDistCoeffsSS << ")";
+     std::cout << "      " << currentDistCoeffsSS.str() << std::endl;
 }
 
 void MotionCamExample::PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix) const {

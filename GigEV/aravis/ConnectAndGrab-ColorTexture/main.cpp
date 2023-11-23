@@ -111,7 +111,8 @@ int main (int argc, char **argv)
         {ConfidenceMap, false},
         {EventMap, false},
         {ColorCameraImage, false},
-        {ReprojectionMap, false}
+        {ReprojectionMap, false},
+        {CoordinateTransformation, false}
     };
 
     for(const auto& output : outputMats) {

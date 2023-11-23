@@ -38,7 +38,8 @@ enum OutputMat {
     NormalMap = 0xFF00,
     EventMap = 0xFF01,
     ColorCameraImage = 0xFF02,
-    ReprojectionMap = 0xFF03
+    ReprojectionMap = 0xFF03,
+    CoordinateTransformation = 0xFF04,
 };
 
 enum StreamOutputFormat {
@@ -131,6 +132,9 @@ bool setOutputMat(ArvCamera* camera, OutputMat outputMat, bool state) {
             break;
         case OutputMat::ReprojectionMap:
             selectorOption = "Reprojection";
+            break;
+        case OutputMat::CoordinateTransformation:
+            selectorOption = "CoordinateTransformation";
             break;
         default:
             return false;

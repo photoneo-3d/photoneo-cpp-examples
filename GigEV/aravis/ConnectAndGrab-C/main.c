@@ -285,6 +285,10 @@ int main (int argc, char **argv) {
         enableComponent(camera, "ColorCamera", TRUE, &error); checkError(error);
     }
 
+    if(findComponentId("CoordinateTransformation") != 0) {
+        enableComponent(camera, "CoordinateTransformation", TRUE, &error); checkError(error);
+    }
+
     /* Choose multipart or chunked data */
     arv_camera_gv_set_multipart(camera, useMultipart, &error);
     checkError(error);

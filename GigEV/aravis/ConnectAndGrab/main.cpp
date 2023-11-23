@@ -16,6 +16,7 @@ void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, V
         OutputMat::EventMap,
         OutputMat::ColorCameraImage,
         OutputMat::ReprojectionMap,
+        OutputMat::CoordinateTransformation
     };
 
     std::cout << "CHUNK DATA buffer:" << std::endl;
@@ -53,6 +54,22 @@ void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, V
             break;
         case OutputMat::ReprojectionMap:
             std::cout << "ReprojectionMap received\n";
+            break;
+        case OutputMat::CoordinateTransformation:
+            std::cout << "CoordinateTransformation received\n";
+
+            //CoordinateTransformation matrix has always 3 rows x 4 columns
+            auto coordinateTransformation = (double(*)[4])data;
+            double rotation[3][3];
+            double translation[3];
+
+            for(size_t i = 0; i < 3; ++i) {
+                for(size_t j = 0; j < 3; ++j) {
+                    rotation[i][j] = coordinateTransformation[i][j];
+                }
+
+                translation[i] = coordinateTransformation[i][3];
+            }
             break;
         }
     }
@@ -179,7 +196,8 @@ int main (int argc, char **argv)
         {ConfidenceMap, false},
         {EventMap, false},
         {ColorCameraImage, false},
-        {ReprojectionMap, false}
+        {ReprojectionMap, false},
+        {CoordinateTransformation, true}
     };
 
     for(const auto& output : outputMats) {

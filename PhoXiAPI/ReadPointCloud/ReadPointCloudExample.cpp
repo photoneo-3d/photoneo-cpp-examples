@@ -11,6 +11,7 @@
 #include <vector>
 #include <thread>
 #include <chrono>
+#include <fstream>
 
 #include "PhoXi.h"
 
@@ -33,6 +34,7 @@ private:
     void ConnectPhoXiDeviceBySerialExample();
     void SoftwareTriggerExample();
     void DataHandlingExample();
+    void SavePointCloudToPTS(const pho::api::PFrame &Frame, const std::string &ptsFilepath);
     void CorrectDisconnectExample();
 
     void PrintFrameInfo(const pho::api::PFrame &Frame);
@@ -223,8 +225,7 @@ void ReadPointCloudExample::SoftwareTriggerExample() {
         PhoXiDevice->TriggerMode = pho::api::PhoXiTriggerMode::Software;
         // Just check if did everything run smoothly
         if (!PhoXiDevice->TriggerMode.isLastOperationSuccessful()) {
-            throw std::runtime_error(
-                    PhoXiDevice->TriggerMode.GetLastErrorMessage().c_str());
+            throw std::runtime_error(PhoXiDevice->TriggerMode.GetLastErrorMessage().c_str());
         }
     }
 
@@ -237,8 +238,7 @@ void ReadPointCloudExample::SoftwareTriggerExample() {
     // We can clear the current Acquisition buffer -- This will not clear Frames
     // that arrives to the PC after the Clear command is performed
     int ClearedFrames = PhoXiDevice->ClearBuffer();
-    std::cout << ClearedFrames << " frames were cleared from the cyclic buffer"
-              << std::endl;
+    std::cout << ClearedFrames << " frames were cleared from the cyclic buffer" << std::endl;
 
     // While we checked the state of the StartAcquisition call, this check is
     // not necessary, but it is a good practice
@@ -248,7 +248,8 @@ void ReadPointCloudExample::SoftwareTriggerExample() {
     }
     for (std::size_t i = 0; i < 5; ++i) {
         std::cout << "Triggering the " << i << "-th frame" << std::endl;
-        int FrameID = PhoXiDevice->TriggerFrame(/*If false is passed here, the device will reject the frame if it is not ready to be triggered, if true us supplied, it will wait for the trigger*/);
+        int FrameID = PhoXiDevice->TriggerFrame(
+                /*If false is passed here, the device will reject the frame if it is not ready to be triggered, if true us supplied, it will wait for the trigger*/);
         if (FrameID < 0) {
             // If negative number is returned trigger was unsuccessful
             std::cout << "Trigger was unsuccessful! code=" << FrameID << std::endl;
@@ -264,9 +265,8 @@ void ReadPointCloudExample::SoftwareTriggerExample() {
         //  Because of this, the TriggerFrame call returns the requested frame
         //  ID, so it can than be retrieved from the Frame structure. This call
         //  is doing that internally in background
-        pho::
-                api::
-                        PFrame Frame = PhoXiDevice->GetSpecificFrame(FrameID /*, You can specify Timeout here - default is the Timeout stored in Timeout Feature -> Infinity by default*/);
+        pho::api::PFrame Frame =
+                PhoXiDevice->GetSpecificFrame(FrameID /*, You can specify Timeout here - default is the Timeout stored in Timeout Feature -> Infinity by default*/);
         if (Frame) {
             PrintFrameInfo(Frame);
             PrintFrameData(Frame);
@@ -360,6 +360,8 @@ void ReadPointCloudExample::DataHandlingExample() {
             << " !" << std::endl;
     }
 
+    SavePointCloudToPTS(SampleFrame, outputFolder + "OtherSampleFrame.pts");
+
     // If you want OpenCV support, you need to link appropriate libraries and
     // add OpenCV include directory To add the support, add #define
     // PHOXI_OPENCV_SUPPORT before include of PhoXi include files For details
@@ -385,6 +387,84 @@ void ReadPointCloudExample::DataHandlingExample() {
     pcl::PointCloud<pcl::PointXYZRGBNormal> MyPCLCloud;
     SampleFrame->ConvertTo(MyPCLCloud);
 #endif
+}
+
+static uint16_t normalization(uint16_t v, uint16_t min, uint16_t max) {
+    const float range = 255;
+    v = (uint16_t)(((float)v - min) / (max - min) * range);
+    return v;
+}
+
+// https://paulbourke.net/dataformats/pts/
+// A pts file is a simple text file used to store point data typically from LIDAR scanners.
+// The first line gives the number of points to follow. Each subsequent line has 7 values,
+// the first three are the (x,y,z) coordinates of the point, the fourth is an "intensity" value,
+// and the last three are the (r,g,b) colour estimates. The (r,g,b) values range from 0 to 255 (single unsigned byte).
+// The intensity value is an estimate of the fraction of incident radiation reflected by the surface at that point,
+// 0 indicates is a very poor return while 255 is a very stong return.
+// Example:
+// Line1: 253730194
+// Line2: -0.41025 -2.0806 8.00981 55 52 44 65
+// Line3: -0.63016 -1.84527 6.59447 228 228 230 225
+// ...
+// LineN: -0.4766 -2.14446 7.91288 60 56 54 68
+//
+// This file can be opened in the CloudCompare tool.
+void ReadPointCloudExample::SavePointCloudToPTS(const pho::api::PFrame &Frame, const std::string &ptsFilepath) {
+    std::ofstream ptsFile(ptsFilepath);
+    if (!ptsFile.is_open()) {
+        std::cout << "Can't open " << ptsFilepath << " for writing!" << std::endl;
+        return;
+    }
+
+    const pho::api::Point3_32f* pcPtr = Frame->PointCloud.GetDataPtr();
+    // Extract texture data in RGB format independent if the texture is grayscale or RGB
+    auto textureRGB = [Frame](size_t index, uint16_t &min, uint16_t& max) -> pho::api::ColorRGB_16 {
+        if (Frame->TextureRGB.Empty()) {
+            uint16_t gray = static_cast<uint16_t>(*(Frame->Texture.GetDataPtr() + index));
+            min = std::min(min, gray);
+            max = std::max(max, gray);
+            return pho::api::ColorRGB_16(gray, gray, gray);
+        } else {
+            pho::api::ColorRGB_16& rgb = *(Frame->TextureRGB.GetDataPtr() + index);
+            min = std::min(min, (uint16_t)rgb.r);
+            max = std::max(max, (uint16_t)rgb.r);
+            min = std::min(min, (uint16_t)rgb.g);
+            max = std::max(max, (uint16_t)rgb.g);
+            min = std::min(min, (uint16_t)rgb.b);
+            max = std::max(max, (uint16_t)rgb.b);
+            return rgb;
+        }
+    };
+
+    pho::api::MatType<pho::api::float32_t> zero(0.);
+    std::vector<std::pair<pho::api::Point3_32f, pho::api::ColorRGB_16>> pc;
+    uint16_t textureMin = std::numeric_limits<uint16_t>::max();
+    uint16_t textureMax = std::numeric_limits<uint16_t>::min();
+    // Save only valid 3D points followed with color in RGB
+    for (size_t i = 0; i < Frame->PointCloud.GetElementsCount(); ++i) {
+        const pho::api::Point3_32f *pnt = pcPtr + i;
+        if (pnt->x != zero && pnt->y != zero && pnt->z != zero) {
+            const pho::api::ColorRGB_16 rgb = textureRGB(i, textureMin, textureMax);
+            pc.push_back(std::make_pair(*pnt, rgb));
+        }
+    }
+
+    const std::string defaultIntensity = "100";
+    ptsFile << pc.size() << "\n";
+    for (auto &vertex : pc) {
+        const pho::api::Point3_32f& pnt = vertex.first;
+        pho::api::ColorRGB_16 rgb = vertex.second;
+        rgb.r = normalization(rgb.r, textureMin, textureMax);
+        rgb.g = normalization(rgb.g, textureMin, textureMax);
+        rgb.b = normalization(rgb.b, textureMin, textureMax);
+        ptsFile << pnt.x << " " << pnt.y << " " << pnt.z << " " << rgb.r << " " << rgb.g << " " << rgb.b << " "
+            << defaultIntensity << "\n";
+    }
+
+    std::cout << "Saved sample frame to: " << ptsFilepath << std::endl;
+
+    ptsFile.close();
 }
 
 void ReadPointCloudExample::Run() {
