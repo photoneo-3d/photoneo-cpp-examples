@@ -50,3 +50,8 @@ generate_example_app(IPSettings
     SOURCES
         IPSettings/main.cpp
 )
+
+generate_example_app(UserSets
+    SOURCES
+        UserSets/main.cpp
+)

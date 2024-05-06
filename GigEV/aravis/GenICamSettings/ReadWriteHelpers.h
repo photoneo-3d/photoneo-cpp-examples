@@ -2,9 +2,7 @@
 #ifndef __READ_WRITE_HELPER_H__
 #define __READ_WRITE_HELPER_H__
 
-extern "C" {
 #include <arv.h>
-}
 
 #include <iostream>
 #include <memory>

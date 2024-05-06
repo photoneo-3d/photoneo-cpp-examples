@@ -1,101 +1,15 @@
 /* SPDX-License-Identifier:Unlicense */
 
 #include "common/PhoAravisCommon.h"
-#include "common/CalculatePointCloud.h"
 #include "common/CalculateNormals.h"
 #include <iomanip>
 
 using namespace pho;
 
-void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, Vec2D* reprojectionMap) {
-    static const OutputMat chunkIds[] = {
-        //OutputMat::Texture - not present in the chunks
-        OutputMat::DepthMap,
-        OutputMat::NormalMap,
-        OutputMat::ConfidenceMap,
-        OutputMat::EventMap,
-        OutputMat::ColorCameraImage,
-        OutputMat::ReprojectionMap,
-        OutputMat::CoordinateTransformation
-    };
-
-    std::cout << "CHUNK DATA buffer:" << std::endl;
-
-    const float* depthMap = nullptr;
-    const NormalsAngles*  normalsAngles = nullptr;
-
-    for(auto chunkId : chunkIds) {
-        size_t dataSize = 0;
-        const void* data = arv_buffer_get_chunk_data(buffer, static_cast<uint32_t>(chunkId), &dataSize);
-        if(!data || dataSize == 0) {
-            continue;
-        }
-
-        switch(chunkId) {
-        case OutputMat::Texture:
-            //If texture is enabled then Image buffer with chunks is sent (see: handleImageBuffer)
-            break;
-        case OutputMat::DepthMap:
-            std::cout << "DepthMap received\n";
-            depthMap = (float*)data;
-            break;
-        case OutputMat::NormalMap:
-            std::cout << "NormalMap received\n";
-            normalsAngles = (NormalsAngles*)data;
-            break;
-        case OutputMat::ConfidenceMap:
-            std::cout << "ConfidenceMap received\n";
-            break;
-        case OutputMat::EventMap:
-            std::cout << "EventMap received\n";
-            break;
-        case OutputMat::ColorCameraImage:
-            std::cout << "ColorCameraImage received\n";
-            break;
-        case OutputMat::ReprojectionMap:
-            std::cout << "ReprojectionMap received\n";
-            break;
-        case OutputMat::CoordinateTransformation:
-            std::cout << "CoordinateTransformation received\n";
-
-            //CoordinateTransformation matrix has always 3 rows x 4 columns
-            auto coordinateTransformation = (double(*)[4])data;
-            double rotation[3][3];
-            double translation[3];
-
-            for(size_t i = 0; i < 3; ++i) {
-                for(size_t j = 0; j < 3; ++j) {
-                    rotation[i][j] = coordinateTransformation[i][j];
-                }
-
-                translation[i] = coordinateTransformation[i][3];
-            }
-            break;
-        }
-    }
-
-    /* Calculate point cloud from depth map and reprojection map */
-    if(depthMap && reprojectionMap) {
-        auto pointCloud = pho::calculatePointCloud(depthMap, reprojectionMap, width, height);
-    }
-
-    /* Calculate normals from normal angles */
-    if(normalsAngles) {
-        auto normals = pho::calculateNormals(normalsAngles, width, height);
-    }
-
-    std::cout << "-------------------------------" << std::endl;
-}
-
-void handleImageBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height, Vec2D* reprojectionMap) {
+void handleImageBuffer(ArvBuffer *buffer) {
     std::cout << "IMAGE buffer:" << std::endl;
     std::cout << "Width: " << arv_buffer_get_image_width(buffer) << std::endl;
     std::cout << "Height: " << arv_buffer_get_image_height(buffer) << std::endl;
-
-    if(arv_buffer_has_chunks(buffer)) {
-        //If buffer has chunks handle them too
-        handleChunkDataBuffer(buffer, width, height, reprojectionMap);
-    }
 }
 
 void handleMultipartBuffer(ArvBuffer *buffer) {
@@ -110,7 +24,6 @@ void handleMultipartBuffer(ArvBuffer *buffer) {
     }
 
     std::cout << "-------------------------------" << std::endl;
-
 }
 
 /*
@@ -143,32 +56,6 @@ int main (int argc, char **argv)
 
     ///-----------------------------------------------------------------------------------------------------------------
 
-    /* Read frame width */
-    uint32_t width = arv_camera_get_integer(camera.get(), "Width", &error);
-    if(error) {
-        std::cerr << "Error: " << error->message << std::endl;
-        return 1;
-    }
-    std::cout << "Width: " << width << "px" << std::endl;
-
-    /* Read frame height */
-    uint32_t height = arv_camera_get_integer(camera.get(), "Height", &error);
-    if(error) {
-        std::cerr << "Error: " << error->message << std::endl;
-        return 1;
-    }
-    std::cout << "Height: " << height << "px" << std::endl;
-
-    /* Read reprojection matrix for point cloud calculation (no need to request in every frame) */
-    Vec2D* reprojectionMap = nullptr;
-    size_t reprojectionMapDataSize = 0;
-    if(!getReprojectionMatrix(camera.get(), reprojectionMap, reprojectionMapDataSize)) {
-        std::cerr << "Error: Failed to read reprojection matrix from camera!" << std::endl;
-    }
-    std::cout << "Reprojection matrix size: " << reprojectionMapDataSize << std::endl;
-
-    ///-----------------------------------------------------------------------------------------------------------------
-
     /* Set trigger mode */
     if(!setTriggerMode(camera.get(), TriggerMode::Freerun)) {
         return 1;
@@ -190,14 +77,14 @@ int main (int argc, char **argv)
 
     /* Enable required output matrices BEFORE getting payload size for buffers */
     const std::pair<OutputMat, bool> outputMats[] = {
-        {Texture, true},
-        {DepthMap, true},
-        {NormalMap, false},
-        {ConfidenceMap, false},
-        {EventMap, false},
+        {Intensity, true},
+        {Range, true},
+        {Normal, true},
+        {Confidence, false},
+        {Event, false},
         {ColorCameraImage, false},
-        {ReprojectionMap, false},
-        {CoordinateTransformation, true}
+        {CoordinateMapA, false},
+        {CoordinateMapB, false},
     };
 
     for(const auto& output : outputMats) {
@@ -205,14 +92,13 @@ int main (int argc, char **argv)
             return 1;
         }
 
-        /* If NormalMap is enabled, check custom setting NormalsEstimationRadius and if value is 0 set to 1 (range: 1-4) */
-        if(output.first == NormalMap && output.second) {
+        if(output.first == Normal && output.second) {
+            /* If Normal is enabled, check custom setting NormalsEstimationRadius and if value is 0 set to 1 (range: 1-4) */
             auto radius = arv_camera_get_integer(camera.get(), "NormalsEstimationRadius", &error);
             if(error) {
                 std::cerr << "Error: Failed to get NormalsEstimationRadius!" << std::endl;
                 return 1;
             }
-
             if(radius == 0) {
                 arv_camera_set_integer(camera.get(), "NormalsEstimationRadius", 1, &error);
                 if(error) {
@@ -220,18 +106,42 @@ int main (int argc, char **argv)
                     return 1;
                 }
             }
+
+            /* Set normals pixel format to:
+             * Coord3D_ABC32f - vectors, more data, no post-processing needed
+             * Coord3D_AC8 - angles of normal vector, less data, required post-processing, see header file
+             *               `CalculateNormals.h`
+             */
+            arv_camera_set_string(camera.get(), "ComponentSelector", "Normal", &error);
+            if(error) {
+                std::cerr << "Error: Failed to select ComponentSelector='Normal'!";
+                return 1;
+            }
+            arv_camera_set_string(camera.get(), "PixelFormat", "Coord3D_ABC32f", &error);
+            if(error) {
+                std::cerr << "Error: Failed to set PixelFormat='Coord3D_ABC32f'!";
+                return 1;
+            }
+        }
+        /* If Range is enabled set required format */
+        else if(output.first == Range && output.second) {
+            /*
+             * CalibratedABC_Grid -> direct XYZ point cloud, more data, no post-processing
+             * ProjectedC -> only projected Z value, less data, requires post-processing with CoordinateMapA and B
+             */
+            arv_camera_set_string(camera.get(), "Scan3dOutputMode", "CalibratedABC_Grid", &error);
+            if(error) {
+                std::cerr << "Error: Failed to set Scan3dOutputMode!" << std::endl;
+                return 1;
+            }
         }
     }
 
     /* Set output format BEFORE getting payload size for buffers */
-    /* ChunkData:
-     * If Texture is enabled, then Image buffer (optionally with chunks) is sent.
-     * If Texture is not enabled then, Chunk data buffer is sent
-     *
-     * MultipartData:
-     * Multipart buffer is always sent
+    /* ImageData: Only Texture is sent.
+     * MultipartData: Multipart buffer with selected components is sent
      */
-    if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::ChunkData)) {
+    if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::MultipartData)) {
         return 1;
     }
 
@@ -267,10 +177,7 @@ int main (int argc, char **argv)
         auto payloadType = arv_buffer_get_payload_type(buffer);
         switch(payloadType) {
         case ARV_BUFFER_PAYLOAD_TYPE_IMAGE:
-            handleImageBuffer(buffer, width, height, reprojectionMap);
-            break;
-        case ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA:
-            handleChunkDataBuffer(buffer, width, height, reprojectionMap);
+            handleImageBuffer(buffer);
             break;
         case ARV_BUFFER_PAYLOAD_TYPE_MULTIPART:
             handleMultipartBuffer(buffer);

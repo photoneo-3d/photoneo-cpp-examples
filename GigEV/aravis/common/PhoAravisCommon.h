@@ -1,9 +1,7 @@
 #ifndef PHOTONEOMAIN_PHOARAVISCOMMON_H
 #define PHOTONEOMAIN_PHOARAVISCOMMON_H
 
-extern "C" {
 #include <arv.h>
-}
 
 #include <memory>
 #include <iostream>
@@ -32,18 +30,18 @@ struct NormalsAngles {
 enum TriggerMode { Freerun = 0, SWTrigger = 1 };
 
 enum OutputMat {
-    Texture = 1,
-    DepthMap = 4,
-    ConfidenceMap = 6,
-    NormalMap = 0xFF00,
-    EventMap = 0xFF01,
-    ColorCameraImage = 0xFF02,
-    ReprojectionMap = 0xFF03,
-    CoordinateTransformation = 0xFF04,
+    Intensity = 1,
+    Range = 4,
+    Confidence = 6,
+    CoordinateMapA = 10,
+    CoordinateMapB = 11,
+    Normal = 0xFF00,
+    Event = 0xFF01,
+    ColorCameraImage = 0xFF02
 };
 
 enum StreamOutputFormat {
-    ChunkData = 1,
+    ImageData = 1,
     MultipartData = 2,
 };
 
@@ -112,29 +110,29 @@ bool setOutputMat(ArvCamera* camera, OutputMat outputMat, bool state) {
     GError* error = nullptr;
     std::string selectorOption;
     switch (outputMat) {
-        case OutputMat::Texture:
+        case OutputMat::Intensity:
             selectorOption = "Intensity";
             break;
-        case OutputMat::DepthMap:
+        case OutputMat::Range:
             selectorOption = "Range";
             break;
-        case OutputMat::NormalMap:
+        case OutputMat::Normal:
             selectorOption = "Normal";
             break;
-        case OutputMat::ConfidenceMap:
+        case OutputMat::CoordinateMapA:
+            selectorOption = "CoordinateMapA";
+            break;
+        case OutputMat::CoordinateMapB:
+            selectorOption = "CoordinateMapB";
+            break;
+        case OutputMat::Confidence:
             selectorOption = "Confidence";
             break;
-        case OutputMat::EventMap:
+        case OutputMat::Event:
             selectorOption = "Event";
             break;
         case OutputMat::ColorCameraImage:
             selectorOption = "ColorCamera";
-            break;
-        case OutputMat::ReprojectionMap:
-            selectorOption = "Reprojection";
-            break;
-        case OutputMat::CoordinateTransformation:
-            selectorOption = "CoordinateTransformation";
             break;
         default:
             return false;
@@ -173,7 +171,7 @@ bool setStreamOutputFormat(ArvCamera* camera, StreamOutputFormat format) {
 
     GError* error = nullptr;
     switch (format) {
-        case StreamOutputFormat::ChunkData: {
+        case StreamOutputFormat::ImageData: {
             arv_camera_gv_set_multipart(camera, false, &error);
             break;
         }
@@ -190,27 +188,6 @@ bool setStreamOutputFormat(ArvCamera* camera, StreamOutputFormat format) {
         return false;
     }
 
-    return true;
-}
-
-bool getReprojectionMatrix(ArvCamera* camera, Vec2D*& reprojectionMap, size_t& reprojectionMapDataSize) {
-    GError* error = nullptr;
-    setTriggerMode(camera, TriggerMode::Freerun);
-    setStreamOutputFormat(camera, StreamOutputFormat::ChunkData);
-    setOutputMat(camera, OutputMat::ReprojectionMap, true);
-
-    auto buffer = arv_camera_acquisition(camera, 0, &error);
-    if (!ARV_IS_BUFFER(buffer)) {
-        std::cerr << "Error: Not a buffer instance!" << std::endl;
-        return false;
-    }
-
-    if (!arv_buffer_has_chunks(buffer)) {
-        std::cerr << "Error: Buffer has no chunk data!" << std::endl;
-        return false;
-    }
-
-    reprojectionMap = (Vec2D*)arv_buffer_get_chunk_data(buffer, OutputMat::ReprojectionMap, &reprojectionMapDataSize);
     return true;
 }
 

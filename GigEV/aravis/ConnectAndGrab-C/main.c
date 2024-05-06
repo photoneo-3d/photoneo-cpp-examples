@@ -168,7 +168,7 @@ void handleChunkDataBuffer(ArvBuffer *buffer, uint32_t width, uint32_t height) {
                 continue;
             }
 
-            // No metada (width, height, pixel format) for chunks
+            // No metadata (width, height, pixel format) for chunks
             fprintf(stdout, "  Chunk %4x %s size %zu bytes\n", chunkId, componentNames[i], dataSize);
         }
     }
@@ -275,7 +275,6 @@ int main (int argc, char **argv) {
     enableComponent(camera, "Range", TRUE, &error); checkError(error);
     enableComponent(camera, "Confidence", TRUE, &error); checkError(error);
     enableComponent(camera, "Normal", TRUE, &error); checkError(error);
-    enableComponent(camera, "Reprojection", TRUE, &error); checkError(error);
     /* Event map is available only on MotionCam */
     if (findComponentId("Event") != 0) {
         enableComponent(camera, "Event", TRUE, &error); checkError(error);
@@ -284,10 +283,8 @@ int main (int argc, char **argv) {
     if (findComponentId("ColorCamera") != 0) {
         enableComponent(camera, "ColorCamera", TRUE, &error); checkError(error);
     }
-
-    if(findComponentId("CoordinateTransformation") != 0) {
-        enableComponent(camera, "CoordinateTransformation", TRUE, &error); checkError(error);
-    }
+    enableComponent(camera, "CoordinateMapA", FALSE, &error); checkError(error);
+    enableComponent(camera, "CoordinateMapB", FALSE, &error); checkError(error);
 
     /* Choose multipart or chunked data */
     arv_camera_gv_set_multipart(camera, useMultipart, &error);
@@ -329,7 +326,6 @@ int main (int argc, char **argv) {
         ArvBufferPayloadType payloadType = arv_buffer_get_payload_type(buffer);
         switch(payloadType) {
         case ARV_BUFFER_PAYLOAD_TYPE_IMAGE:
-        case ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA:
             handleChunkDataBuffer(buffer, width, height);
             break;
         case ARV_BUFFER_PAYLOAD_TYPE_MULTIPART:

@@ -9,7 +9,7 @@
 
 using namespace pho;
 
-void handleImageDataBuffer(ArvBuffer *buffer) {
+void handleImageDataBufferMono16(ArvBuffer *buffer) {
     size_t dataSize = 0;
     const void* data = arv_buffer_get_image_data(buffer, &dataSize);
     if (!data || dataSize == 0) {
@@ -31,8 +31,31 @@ void handleImageDataBuffer(ArvBuffer *buffer) {
     /* cv::imshow uses BRG format */
     cv::cvtColor(rgbMat, rgbMat, cv::COLOR_RGB2BGR);
 
-    cv::imshow("RGB Texture", rgbMat);
-    cv::imshow("YCoCg Texture", mat);
+    cv::imshow("YCoCg converted to RGB", rgbMat);
+    cv::imshow("YCoCg texture", mat);
+    cv::waitKey(0);
+}
+
+void handleImageDataBufferRGB(ArvBuffer *buffer) {
+    size_t dataSize = 0;
+    const void* data = arv_buffer_get_image_data(buffer, &dataSize);
+    if (!data || dataSize == 0) {
+        return;
+    }
+
+    auto width = arv_buffer_get_image_width(buffer);
+    auto height = arv_buffer_get_image_height(buffer);
+    std::cout << "Width: " << width << std::endl;
+    std::cout << "Height: " << height << std::endl;
+
+    auto mat = cv::Mat(height, width, CV_8UC3, (void*)data);
+
+    /* Normalize just for visualization */
+    cv::normalize(mat, mat, 0, 255, cv::NORM_MINMAX);
+
+    /* cv::imshow uses BRG format */
+    cv::cvtColor(mat, mat, cv::COLOR_RGB2BGR);
+    cv::imshow("RGB Texture from device", mat);
     cv::waitKey(0);
 }
 
@@ -61,28 +84,21 @@ int main (int argc, char **argv)
 
     std::cerr << "Connected to camera: " << arv_camera_get_model_name (camera.get(), nullptr) << std::endl;
 
-    /* Read frame width */
-    uint32_t width = arv_camera_get_integer(camera.get(), "Width", &error);
-    if(error) {
-        std::cerr << "Error: " << error->message << std::endl;
-        return 1;
-    }
-    std::cout << "Width: " << width << "px" << std::endl;
-
-    /* Read frame height */
-    uint32_t height = arv_camera_get_integer(camera.get(), "Height", &error);
-    if(error) {
-        std::cerr << "Error: " << error->message << std::endl;
-        return 1;
-    }
-    std::cout << "Height: " << height << "px" << std::endl;
-
     /* Set trigger mode */
     if(!setTriggerMode(camera.get(), TriggerMode::SWTrigger)) {
         return 1;
     }
 
-    /* Set TextureSource to Color */
+    /* Set OperationMode to Camera */
+    arv_camera_set_string(camera.get(), "OperationMode", "Camera", &error);
+    if(error) {
+        std::cerr << "Error: Failed to set OperationMode='Camera'!";
+        return 1;
+    }
+
+    /* Set TextureSource to Color
+     * If OperationMode == Scanner then use TextureSource instead of CameraTextureSource
+     */
     arv_camera_set_string(camera.get(), "CameraTextureSource", "Color", &error);
     if(error) {
         std::cerr << "Error: Failed to set CameraTextureSource='Color'!";
@@ -105,48 +121,40 @@ int main (int argc, char **argv)
 
     /* Enable required output matrices BEFORE getting payload size for buffers */
     const std::pair<OutputMat, bool> outputMats[] = {
-        {Texture, true},
-        {DepthMap, false},
-        {NormalMap, false},
-        {ConfidenceMap, false},
-        {EventMap, false},
+        {Intensity, true},
+        {Range, false},
+        {Normal, false},
+        {Confidence, false},
+        {Event, false},
         {ColorCameraImage, false},
-        {ReprojectionMap, false},
-        {CoordinateTransformation, false}
+        {CoordinateMapA, false},
+        {CoordinateMapB, false},
     };
 
     for(const auto& output : outputMats) {
         if(!setOutputMat(camera.get(), output.first, output.second)) {
             return 1;
         }
-
-        /* If NormalMap is enabled, check custom setting NormalsEstimationRadius and if value is 0 set to 1 (range: 1-4) */
-        if(output.first == NormalMap && output.second) {
-            auto radius = arv_camera_get_integer(camera.get(), "NormalsEstimationRadius", &error);
-            if(error) {
-                std::cerr << "Error: Failed to get NormalsEstimationRadius!" << std::endl;
-                return 1;
-            }
-
-            if(radius == 0) {
-                arv_camera_set_integer(camera.get(), "NormalsEstimationRadius", 1, &error);
-                if(error) {
-                    std::cerr << "Error: Failed to set NormalsEstimationRadius!" << std::endl;
-                    return 1;
-                }
-            }
-        }
     }
 
     /* Set output format BEFORE getting payload size for buffers */
-    /* ChunkData:
-     * If Texture is enabled, then Image buffer (optionally with chunks) is sent.
-     * If Texture is not enabled, then Chunk data buffer is sent
-     *
-     * MultipartData:
-     * Multipart buffer is always sent
+    /* ImageData: Only Texture is sent.
+     * MultipartData: Multipart buffer with selected components is sent
      */
-    if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::ChunkData)) {
+    if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::MultipartData)) {
+        return 1;
+    }
+
+    /// Example using PixelFormat RGB8 directly from the device
+    /* Set texture pixel format to RGB8 */
+    arv_camera_set_string(camera.get(), "ComponentSelector", "Intensity", &error);
+    if(error) {
+        std::cerr << "Error: Failed to select ComponentSelector='Intensity'!";
+        return 1;
+    }
+    arv_camera_set_string(camera.get(), "PixelFormat", "RGB8", &error);
+    if(error) {
+        std::cerr << "Error: Failed to set PixelFormat='RGB8'!";
         return 1;
     }
 
@@ -178,9 +186,56 @@ int main (int argc, char **argv)
     }
 
     std::cout << "Got buffer..." << std::endl;
-    handleImageDataBuffer(buffer);
+    handleImageDataBufferRGB(buffer);
 
-    arv_stream_push_buffer(stream.get(), buffer);
+    /*
+     * In this example changing PixelFormat changes payload size so buffer must be recreated. Delete old one instead
+     * of pushing it back to the queue.
+     */
+    g_object_unref(buffer);
+
+
+    /// Example using PixelFormat Mono16 in YCoCg coding and conversion to RGB8
+    /* Set texture pixel format to Mono16 */
+    arv_camera_set_string(camera.get(), "ComponentSelector", "Intensity", &error);
+    if(error) {
+        std::cerr << "Error: Failed to select ComponentSelector='Intensity'!";
+        return 1;
+    }
+    arv_camera_set_string(camera.get(), "PixelFormat", "Mono16", &error);
+    if(error) {
+        std::cerr << "Error: Failed to set PixelFormat='Mono16'!";
+        return 1;
+    }
+
+    /* Retrieve the payload size after PixelFormat change for new buffer creation */
+    payload = arv_camera_get_payload (camera.get(), &error);
+    if(error) {
+        std::cerr << "Error: Failed to obtain payload size!" << std::endl;
+        return 1;
+    }
+    std::cout << "Payload size: " << payload << " bytes" << std::endl;
+
+    /* Insert some buffers in the stream buffer pool */
+    arv_stream_push_buffer(stream.get(), arv_buffer_new(payload, nullptr));
+
+    triggerFrame(camera.get());
+
+    buffer = arv_stream_timeout_pop_buffer(stream.get(), 2000000);
+    if (!ARV_IS_BUFFER (buffer)) {
+        std::cerr << "Error: Buffer is not a buffer instance!" << std::endl;
+        return 1;
+    }
+
+    std::cout << "Got buffer..." << std::endl;
+    handleImageDataBufferMono16(buffer);
+
+    /*
+     * In this example changing PixelFormat changes payload size so buffer must be recreated. Delete old one instead
+     * of pushing it back to the queue.
+     */
+    g_object_unref(buffer);
+
 
     /* Stop the acquisition */
     arv_camera_stop_acquisition(camera.get(), &error);

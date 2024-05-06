@@ -104,6 +104,9 @@ int main (int argc, char **argv)
     }
 
     /* Set output format BEFORE getting payload size for buffers */
+    /* ImageData: Only Texture is sent.
+     * MultipartData: Multipart buffer with selected components is sent
+     */
     if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::MultipartData)) {
         return 1;
     }

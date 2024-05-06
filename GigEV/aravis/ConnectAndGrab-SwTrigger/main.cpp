@@ -50,14 +50,14 @@ int main (int argc, char **argv)
 
     /* Enable required output matrices BEFORE getting payload size for buffers */
     const std::pair<OutputMat, bool> outputMats[] = {
-        {Texture, true},
-        {DepthMap, true},
-        {NormalMap, false},
-        {ConfidenceMap, false},
-        {EventMap, false},
+        {Intensity, true},
+        {Range, true},
+        {Normal, false},
+        {Confidence, false},
+        {Event, false},
         {ColorCameraImage, false},
-        {ReprojectionMap, false},
-        {CoordinateTransformation, false}
+        {CoordinateMapA, false},
+        {CoordinateMapB, false},
     };
 
     for(const auto& output : outputMats) {
@@ -66,7 +66,7 @@ int main (int argc, char **argv)
         }
 
         /* If NormalMap is enabled, check custom setting NormalsEstimationRadius and if value is 0 set to 1 (range: 1-4) */
-        if(output.first == NormalMap && output.second == true) {
+        if(output.first == Normal && output.second) {
             auto radius = arv_camera_get_integer(camera.get(), "NormalsEstimationRadius", &error);
             if(error) {
                 std::cerr << "Error: Failed to get NormalsEstimationRadius!" << std::endl;
@@ -84,14 +84,10 @@ int main (int argc, char **argv)
     }
 
     /* Set output format BEFORE getting payload size for buffers */
-    /* ChunkData:
-     * If Texture is enabled, then Image buffer (optionally with chunks) is sent.
-     * If Texture is not enabled, then Chunk data buffer is sent
-     *
-     * MultipartData:
-     * Multipart buffer is always sent
+    /* ImageData: Only Texture is sent.
+     * MultipartData: Multipart buffer with selected components is sent
      */
-    if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::ChunkData)) {
+    if(!setStreamOutputFormat(camera.get(), StreamOutputFormat::MultipartData)) {
         return 1;
     }
 
