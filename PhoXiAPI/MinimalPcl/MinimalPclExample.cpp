@@ -185,6 +185,8 @@ void printFrameInfo(const pho::api::PFrame &Frame) {
               << FrameInfo.FrameComputationDuration << " ms" << std::endl;
     std::cout << "    Frame Transfer duration: "
               << FrameInfo.FrameTransferDuration << " ms" << std::endl;
+    std::cout << "    Frame Acquisition time (PTP): "
+              << FrameInfo.FrameStartTime.TimeAsString("%Y-%m-%d %H:%M:%S") << std::endl;
     std::cout << "    Sensor Position: [" << FrameInfo.SensorPosition.x << "; "
               << FrameInfo.SensorPosition.y << "; "
               << FrameInfo.SensorPosition.z << "]" << std::endl;
@@ -194,6 +196,13 @@ void printFrameInfo(const pho::api::PFrame &Frame) {
         << FrameInfo.ColorCameraPosition.y << "; "
         << FrameInfo.ColorCameraPosition.z << "]"
         << std::endl;
+    std::cout << "    Current Camera Position: ["
+        << FrameInfo.CurrentCameraPosition.x << "; "
+        << FrameInfo.CurrentCameraPosition.y << "; "
+        << FrameInfo.CurrentCameraPosition.z << "]"
+        << std::endl;
+    std::cout << "    FilenamePath: " << FrameInfo.FilenamePath << std::endl;
+    std::cout << "    HWIdentification: " << FrameInfo.HWIdentification << std::endl;
 }
 
 void printFrameData(const pho::api::PFrame &Frame) {

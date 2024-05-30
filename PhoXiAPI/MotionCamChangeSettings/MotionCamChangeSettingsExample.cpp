@@ -465,63 +465,72 @@ void MotionCamExample::CorrectDisconnectExample() {
 }
 
 void MotionCamExample::PrintMotionCamGeneral(const pho::api::PhoXiMotionCam &MotionCam) const {
-    std::cout << "  MotionCam: " << std::endl;
-    std::cout << "    OperationMode: " << std::string(MotionCam.OperationMode) << std::endl;
-    std::cout << "    LaserPower: " << MotionCam.LaserPower << std::endl;
-    std::cout << "    LEDPower: " << MotionCam.LEDPower << std::endl;
-    std::cout << "    MaximumFPS: " << MotionCam.MaximumFPS << std::endl;
-    std::cout << "    HardwareTrigger: " << MotionCam.HardwareTrigger << std::endl;
+    std::cout << "  MotionCam: "            << std::endl;
+    std::cout << "    OperationMode: "      << std::string(MotionCam.OperationMode) << std::endl;
+    std::cout << "    LaserPower: "         << MotionCam.LaserPower << std::endl;
+    std::cout << "    LEDPower: "           << MotionCam.LEDPower << std::endl;
+    std::cout << "    MaximumFPS: "         << MotionCam.MaximumFPS << std::endl;
+    std::cout << "    HardwareTrigger: "    << MotionCam.HardwareTrigger << std::endl;
 }
 
 void MotionCamExample::PrintMotionCamCameraMode(const pho::api::PhoXiMotionCamCameraMode &CameraMode) const {
-    std::cout << "  CameraMode: " << std::endl;
-    std::cout << "    Exposure: " << CameraMode.Exposure << std::endl;
-    std::cout << "    SamplingTopology: " << std::string(CameraMode.SamplingTopology) << std::endl;
-    std::cout << "    OutputTopology: " << std::string(CameraMode.OutputTopology) << std::endl;
-    std::cout << "    CodingStrategy: " << std::string(CameraMode.CodingStrategy) << std::endl;
-    std::cout << "    TextureSource: " << std::string(CameraMode.TextureSource) << std::endl;
+    std::cout << "  CameraMode: "           << std::endl;
+    std::cout << "    Exposure: "           << CameraMode.Exposure << std::endl;
+    std::cout << "    SamplingTopology: "   << std::string(CameraMode.SamplingTopology) << std::endl;
+    std::cout << "    OutputTopology: "     << std::string(CameraMode.OutputTopology) << std::endl;
+    std::cout << "    CodingStrategy: "     << std::string(CameraMode.CodingStrategy) << std::endl;
+    std::cout << "    TextureSource: "      << std::string(CameraMode.TextureSource) << std::endl;
 }
 
 void MotionCamExample::PrintMotionCamScannerMode(const pho::api::PhoXiMotionCamScannerMode &ScannerMode) const {
-    std::cout << "  ScannerMode: " << std::endl;
-    std::cout << "    ShutterMultiplier: " << ScannerMode.ShutterMultiplier << std::endl;
-    std::cout << "    ScanMultiplier: " << ScannerMode.ScanMultiplier << std::endl;
-    std::cout << "    CodingStrategy: " << std::string(ScannerMode.CodingStrategy) << std::endl;
-    std::cout << "    CodingQuality: " << std::string(ScannerMode.CodingQuality) << std::endl;
-    std::cout << "    TextureSource: " << std::string(ScannerMode.TextureSource) << std::endl;
-    std::cout << "    Exposure: " << ScannerMode.Exposure << std::endl;
+    std::cout << "  ScannerMode: "          << std::endl;
+    std::cout << "    ShutterMultiplier: "  << ScannerMode.ShutterMultiplier << std::endl;
+    std::cout << "    ScanMultiplier: "     << ScannerMode.ScanMultiplier << std::endl;
+    std::cout << "    CodingStrategy: "     << std::string(ScannerMode.CodingStrategy) << std::endl;
+    std::cout << "    CodingQuality: "      << std::string(ScannerMode.CodingQuality) << std::endl;
+    std::cout << "    TextureSource: "      << std::string(ScannerMode.TextureSource) << std::endl;
+    std::cout << "    Exposure: "           << ScannerMode.Exposure << std::endl;
 }
 
 void MotionCamExample::PrintProcessingSettings(const pho::api::PhoXiProcessingSettings &ProcessingSettings) const {
-    std::cout << "  ProcessingSettings: " << std::endl;
+    std::cout << "  ProcessingSettings: "               << std::endl;
     PrintVector("MinCameraSpace(in DataCutting)", ProcessingSettings.ROI3D.CameraSpace.min);
     PrintVector("MaxCameraSpace(in DataCutting)", ProcessingSettings.ROI3D.CameraSpace.max);
     PrintVector("MinPointCloudSpace (in DataCutting)", ProcessingSettings.ROI3D.PointCloudSpace.min);
     PrintVector("MaxPointCloudSpace (in DataCutting)", ProcessingSettings.ROI3D.PointCloudSpace.max);
-    std::cout << "    MaxCameraAngle: " << ProcessingSettings.NormalAngle.MaxCameraAngle << std::endl;
-    std::cout << "    MaxProjectionAngle: " << ProcessingSettings.NormalAngle.MaxProjectorAngle << std::endl;
-    std::cout << "    MinHalfwayAngle: " << ProcessingSettings.NormalAngle.MinHalfwayAngle << std::endl;
-    std::cout << "    MaxHalfwayAngle: " << ProcessingSettings.NormalAngle.MaxHalfwayAngle << std::endl;
-    std::cout << "    Confidence (MaxInaccuracy): " << ProcessingSettings.Confidence << std::endl;
-    std::cout << "    SurfaceSmoothness: " << std::string(ProcessingSettings.SurfaceSmoothness) << std::endl;
-    std::cout << "    NormalsEstimationRadius: " << ProcessingSettings.NormalsEstimationRadius << std::endl;
+    std::cout << "    MaxCameraAngle: "                 << ProcessingSettings.NormalAngle.MaxCameraAngle << std::endl;
+    std::cout << "    MaxProjectionAngle: "             << ProcessingSettings.NormalAngle.MaxProjectorAngle << std::endl;
+    std::cout << "    MinHalfwayAngle: "                << ProcessingSettings.NormalAngle.MinHalfwayAngle << std::endl;
+    std::cout << "    MaxHalfwayAngle: "                << ProcessingSettings.NormalAngle.MaxHalfwayAngle << std::endl;
+    std::cout << "    Confidence (MaxInaccuracy): "     << ProcessingSettings.Confidence << std::endl;
+    std::cout << "    SurfaceSmoothness: "              << std::string(ProcessingSettings.SurfaceSmoothness) << std::endl;
+    std::cout << "    NormalsEstimationRadius: "        << ProcessingSettings.NormalsEstimationRadius << std::endl;
+    std::cout << "    InterreflectionsFiltering: "      << ProcessingSettings.InterreflectionsFiltering << std::endl;
+    std::cout << "    InterreflectionFilterStrength: "  << ProcessingSettings.InterreflectionFilterStrength << std::endl;
+    std::cout << "    PatternDecompositionReach: "      << ProcessingSettings.PatternDecompositionReach << std::endl;
+    std::cout << "    SignalContrastThreshold: "        << ProcessingSettings.SignalContrastThreshold << std::endl;
+    std::cout << "    PatternCodeCorrection: "          << ProcessingSettings.PatternCodeCorrection << std::endl;
+    std::cout << "    GlareCompensation: "              << ProcessingSettings.GlareCompensation << std::endl;
+    std::cout << "    HoleFilling: "                    << ProcessingSettings.HoleFilling << std::endl;
 }
 
 void MotionCamExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinatesSettings &CoordinatesSettings) const {
-    std::cout << "  CoordinatesSettings: " << std::endl;
+    std::cout << "  CoordinatesSettings: "      << std::endl;
     PrintMatrix("CustomRotationMatrix", CoordinatesSettings.CustomTransformation.Rotation);
     PrintVector("CustomTranslationVector", CoordinatesSettings.CustomTransformation.Translation);
     PrintMatrix("RobotRotationMatrix", CoordinatesSettings.RobotTransformation.Rotation);
     PrintVector("RobotTranslationVector", CoordinatesSettings.RobotTransformation.Translation);
-    std::cout << "    CoordinateSpace: " << std::string(CoordinatesSettings.CoordinateSpace) << std::endl;
-    std::cout << "    RecognizeMarkers: " << CoordinatesSettings.RecognizeMarkers << std::endl;
-    std::cout << "    SaveTransformations: " << CoordinatesSettings.SaveTransformations << std::endl;
+    std::cout << "    CoordinateSpace: "        << std::string(CoordinatesSettings.CoordinateSpace) << std::endl;
+    std::cout << "    RecognizeMarkers: "       << CoordinatesSettings.RecognizeMarkers << std::endl;
+    std::cout << "    SaveTransformations: "    << CoordinatesSettings.SaveTransformations << std::endl;
     std::cout << "    MarkerScale: "
         << CoordinatesSettings.MarkersSettings.MarkerScale.Width << " x "
         << CoordinatesSettings.MarkersSettings.MarkerScale.Height
         << std::endl;
-    std::cout << "CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
+    std::cout << "CameraSpace: "                << std::string(CoordinatesSettings.CameraSpace) << std::endl;
     PrintVirtualCamera("CurrentCamera", CoordinatesSettings.CurrentCamera);
+    PrintVirtualCamera("CurrentPrimaryCamera", CoordinatesSettings.CurrentPrimaryCamera);
+    PrintVirtualCamera("CurrentColorCamera", CoordinatesSettings.CurrentColorCamera);
 }
 
 void MotionCamExample::PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string& source) const

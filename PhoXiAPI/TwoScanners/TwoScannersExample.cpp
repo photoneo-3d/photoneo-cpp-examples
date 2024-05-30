@@ -194,13 +194,24 @@ void TwoScannersExample::PrintFrameInfo(const pho::api::PFrame &Frame) {
               << FrameInfo.FrameComputationDuration << " ms" << std::endl;
     std::cout << "    Frame Transfer duration: "
               << FrameInfo.FrameTransferDuration << " ms" << std::endl;
-    std::cout << "    Sensor Position: [" << FrameInfo.SensorPosition.x << "; "
+    std::cout << "    Frame Acquisition time (PTP): "
+              << FrameInfo.FrameStartTime.TimeAsString("%Y-%m-%d %H:%M:%S") << std::endl;
+    std::cout << "    Sensor Position: ["
+              << FrameInfo.SensorPosition.x << "; "
               << FrameInfo.SensorPosition.y << "; "
               << FrameInfo.SensorPosition.z << "]" << std::endl;
     std::cout << "    Total scan count: " << FrameInfo.TotalScanCount << std::endl;
-    std::cout << "    Color Camera Position: ["  << FrameInfo.ColorCameraPosition.x << "; "
+    std::cout << "    Color Camera Position: ["
+              << FrameInfo.ColorCameraPosition.x << "; "
               << FrameInfo.ColorCameraPosition.y << "; "
               << FrameInfo.ColorCameraPosition.z << "]" << std::endl;
+    std::cout << "    Current Camera Position: ["
+              << FrameInfo.CurrentCameraPosition.x << "; "
+              << FrameInfo.CurrentCameraPosition.y << "; "
+              << FrameInfo.CurrentCameraPosition.z << "]"
+              << std::endl;
+    std::cout << "    FilenamePath: " << FrameInfo.FilenamePath << std::endl;
+    std::cout << "    HWIdentification: " << FrameInfo.HWIdentification << std::endl;
 }
 
 void TwoScannersExample::PrintFrameData(const pho::api::PFrame &Frame) {

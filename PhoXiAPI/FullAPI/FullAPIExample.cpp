@@ -1039,6 +1039,7 @@ void FullAPIExample::PrintFrameInfo(const pho::api::PFrame &Frame)
     std::cout << "    Frame Acquisition duration: " << FrameInfo.FrameDuration << " ms" << std::endl;
     std::cout << "    Frame Computation duration: " << FrameInfo.FrameComputationDuration << " ms" << std::endl;
     std::cout << "    Frame Transfer duration: " << FrameInfo.FrameTransferDuration << " ms" << std::endl;
+    std::cout << "    Frame Acquisition time (PTP): " << FrameInfo.FrameStartTime.TimeAsString("%Y-%m-%d %H:%M:%S") << std::endl;
     std::cout << "    Sensor Position: ["
         << FrameInfo.SensorPosition.x << "; "
         << FrameInfo.SensorPosition.y << "; "
@@ -1054,6 +1055,13 @@ void FullAPIExample::PrintFrameInfo(const pho::api::PFrame &Frame)
         << FrameInfo.ColorCameraPosition.y << "; "
         << FrameInfo.ColorCameraPosition.z << "]"
         << std::endl;
+    std::cout << "    Current Camera Position: ["
+        << FrameInfo.CurrentCameraPosition.x << "; "
+        << FrameInfo.CurrentCameraPosition.y << "; "
+        << FrameInfo.CurrentCameraPosition.z << "]"
+        << std::endl;
+    std::cout << "    FilenamePath: " << FrameInfo.FilenamePath << std::endl;
+    std::cout << "    HWIdentification: " << FrameInfo.HWIdentification << std::endl;
 }
 
 void FullAPIExample::PrintFrameData(const pho::api::PFrame &Frame)
@@ -1160,6 +1168,12 @@ void FullAPIExample::PrintProcessingSettings(const pho::api::PhoXiProcessingSett
     std::cout << "    SurfaceSmoothness: "          << std::string(ProcessingSettings.SurfaceSmoothness) << std::endl;
     std::cout << "    NormalsEstimationRadius: "    << ProcessingSettings.NormalsEstimationRadius << std::endl;
     std::cout << "    InterreflectionsFiltering: "  << ProcessingSettings.InterreflectionsFiltering << std::endl;
+    std::cout << "    InterreflectionFilterStrength: " << ProcessingSettings.InterreflectionFilterStrength << std::endl;
+    std::cout << "    PatternDecompositionReach: "  << ProcessingSettings.PatternDecompositionReach << std::endl;
+    std::cout << "    SignalContrastThreshold: "    << ProcessingSettings.SignalContrastThreshold << std::endl;
+    std::cout << "    PatternCodeCorrection: "      << ProcessingSettings.PatternCodeCorrection << std::endl;
+    std::cout << "    GlareCompensation: "          << ProcessingSettings.GlareCompensation << std::endl;
+    std::cout << "    HoleFilling: "                << ProcessingSettings.HoleFilling << std::endl;
 }
 
 void FullAPIExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinatesSettings &CoordinatesSettings)
@@ -1178,6 +1192,8 @@ void FullAPIExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinatesSe
         << std::endl;
     std::cout << "CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
     PrintVirtualCamera("CurrentCamera", CoordinatesSettings.CurrentCamera);
+    PrintVirtualCamera("CurrentPrimaryCamera", CoordinatesSettings.CurrentPrimaryCamera);
+    PrintVirtualCamera("CurrentColorCamera", CoordinatesSettings.CurrentColorCamera);
 }
 
 void FullAPIExample::PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string &source)
