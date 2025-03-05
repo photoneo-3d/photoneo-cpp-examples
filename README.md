@@ -1,5 +1,5 @@
 # Photoneo C++ examples
-![image](https://photoneo.com/files/dw/dw/github/Personal_Linkedin_banner_v3.png)
+![image](https://photoneo.com/files/dw/dw/github/Personal_Linkedin_banner_v4.png)
 
 #### Prerequisites
 
