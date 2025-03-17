@@ -1,7 +1,7 @@
 /*
 * Photoneo's API Example - RecordingExample.cpp
 * Sets up and starts recording
-*/
+ */
 
 #include <vector>
 #include <string>
@@ -34,7 +34,7 @@ int main(int argc, char *argv[])
     if (PhoXiDevice)
     {
         std::cout << "You have already PhoXi device opened in PhoXi Control, the API Example is connected to device: "
-            << (std::string) PhoXiDevice->HardwareIdentification << std::endl;
+                  << (std::string) PhoXiDevice->HardwareIdentification << std::endl;
     }
     else
     {
@@ -88,7 +88,7 @@ int main(int argc, char *argv[])
         }
     })json";
 
-    //Start recording with setup json options for PLY container, do not store options persistently 
+    //Start recording with setup json options for PLY container, do not store options persistently
     pho::api::PhoXi::StartRecordingResult ret = PhoXiDevice->StartRecording(plyRecordingOptions, false);
     if (ret != pho::api::PhoXi::StartRecordingResult::Success) {
         std::cout << "Failed to start recording for PLY container! Error: " << static_cast<int>(ret) << std::endl;
@@ -135,4 +135,3 @@ int main(int argc, char *argv[])
     PhoXiDevice->Disconnect();
     return 0;
 }
-

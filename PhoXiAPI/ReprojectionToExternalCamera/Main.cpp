@@ -1,50 +1,45 @@
-#define PHOXI_OPENCV_SUPPORT
 #include <PhoXi.h>
 
 #include "Calibration.h"
-#include "ColorPointCloud.h"
-#include "DepthMap.h"
+#include "Reprojection.h"
 #include "Utils/Calibration.h"
 #include "Utils/Util.h"
 
 #include <thread>
 
-namespace externalCamera {
+namespace reprojectionToExternalCamera {
 
 void interactive(pho::api::PhoXiFactory& factory) {
     while (true) {
         const int actionId = utils::ask<int>(
             "Please select which action would you like to perform:",
             {
-                    {1, "Calibration"},
-                    {2, "Calculate DepthMap"},
-                    {3, "Calculate Color Point Cloud Texture"},
-                    {4, "Exit"}
+                {1, "Calibration"},
+                {2, "Reprojection"},
+                {3, "Exit"}
             });
-        if (actionId == 4)
+        if (actionId == 3) {
             break;
+        }
         switch (actionId) {
         case 1:
             calibrateInteractive(factory);
             break;
         case 2:
-            depthMapInteractive(factory);
-            break;
-        case 3:
-            colorPointCloudInteractive(factory);
+            reprojectionInteractive(factory);
             break;
         }
     }
     std::cout << "Exiting application..." << std::endl;
 }
 
-} // namespace externalCamera
+} // namespace reprojectionToExternalCamera
 
 int main(int argc, char *argv[]) {
-    using namespace externalCamera;
+    using namespace reprojectionToExternalCamera;
     pho::api::PhoXiFactory factory;
 
-    std::cout << "External Camera Example" << std::endl;
+    std::cout << "Reprojection to External Camera Example" << std::endl;
     std::cout << std::endl;
 
     std::cout << "Waiting for PhoXi Control" <<std::endl;
@@ -60,22 +55,8 @@ int main(int argc, char *argv[]) {
     utils::Path::setProjectFolder("");
 
     try {
-        if (argc > 1) {
-            if (!strcmp("--calibrate", argv[1])) {
-                calibrateFromFiles(
-                        factory, argc - 2, argv + 2);
-            }
-            else if (!strcmp("--depthmap", argv[1])) {
-                depthMapFromFile(
-                        factory, argc - 2, argv + 2);
-            }
-            else if (!strcmp("--colorpc", argv[1])) {
-                colorPointCloudFromFile(
-                        factory, argc - 2, argv + 2);
-            }
-        } else {
-            interactive(factory);
-        }
+        interactive(factory);
+        return 0;
     }
     catch (utils::MissingCalibrationFile& e) {
         utils::printCalibrationError(e);
@@ -85,7 +66,7 @@ int main(int argc, char *argv[]) {
     }
     catch (std::runtime_error& e) {
         std::cout << "Error occured: " << std::endl;
-        std::cout << "\t" << e.what() << std::endl;;
+        std::cout << "\t" << e.what() << std::endl;
     }
-    return 0;
+    return 1;
 }

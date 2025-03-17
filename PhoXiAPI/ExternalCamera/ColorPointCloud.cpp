@@ -1,13 +1,15 @@
 #include "ColorPointCloud.h"
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <PhoXiAdditionalCamera.h>
-#include <PhoXiOpenCVSupport.h>
-#include "Calibration.h"
+
 #include "ExternalCamera.h"
+#include "Utils/Calibration.h"
 #include "Utils/FileCamera.h"
 #include "Utils/Scanner.h"
 #include "Utils/Util.h"
+
+#include <PhoXiAdditionalCamera.h>
+
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
 
 namespace externalCamera {
 
@@ -180,8 +182,8 @@ void colorPointCloudFromFile(
             utils::Path::join(utils::Path::dataFolder(), "1.praw"));
 
     // Load calibration info
-    auto calibration = loadCalibration();
-    printCalibration(calibration);
+    auto calibration = utils::loadCalibration();
+    utils::printCalibration(calibration);
 
     // Attach praw file as FileCamera
     utils::AttachedFileCamera fileCamera{factory, prawNames};
@@ -205,8 +207,8 @@ void colorPointCloudInteractive(
     int count = 0;
 
     // Load calibration info
-    auto calibration = loadCalibration();
-    printCalibration(calibration);
+    auto calibration = utils::loadCalibration();
+    utils::printCalibration(calibration);
 
     // Connect to a scanner
     auto device = utils::selectAndConnectDevice(factory);

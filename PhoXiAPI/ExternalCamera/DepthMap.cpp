@@ -1,15 +1,16 @@
 #include "DepthMap.h"
-#include <opencv2/core.hpp>
-#include <opencv2/imgcodecs.hpp>
-#include <PhoXiAdditionalCamera.h>
-#include <PhoXiOpenCVSupport.h>
-#include "Calibration.h"
+
+#include "Utils/Calibration.h"
 #include "Utils/FileCamera.h"
 #include "Utils/Scanner.h"
 #include "Utils/Util.h"
 
-namespace externalCamera {
+#include <PhoXiAdditionalCamera.h>
 
+#include <opencv2/core.hpp>
+#include <opencv2/imgcodecs.hpp>
+
+namespace externalCamera {
 
 pho::api::DepthMap32f getDepthMap(
         pho::api::PPhoXi device,
@@ -27,7 +28,7 @@ void saveDepthMap(
         const std::string& path,
         const pho::api::DepthMap32f& depthMap) {
     cv::Mat cvDepthMap;
-    ConvertMat2DToOpenCVMat(depthMap, cvDepthMap);
+    pho::api::ConvertMat2DToOpenCVMat(depthMap, cvDepthMap);
 
     cv::Mat cvDepthMapInt;
     cvDepthMap.convertTo(cvDepthMapInt, CV_16U);
@@ -37,13 +38,12 @@ void saveDepthMap(
     std::cout << "Depth map saved to " << path << std::endl;
 }
 
-
 void depthMapFromFile(
         pho::api::PhoXiFactory& factory,
         int argc,
         char* argv[]) {
     std::vector<std::string> prawNames;
-    std::string outputPath = "fileCamera.jpg";
+    std::string outputPath = "fileCamera.tif";
 
     if (argc > 0)
         prawNames.push_back(argv[0]);
@@ -57,8 +57,8 @@ void depthMapFromFile(
             utils::Path::join(utils::Path::dataFolder(), "1.praw"));
 
     // Load calibration info
-    auto calibration = loadCalibration();
-    printCalibration(calibration);
+    auto calibration = utils::loadCalibration();
+    utils::printCalibration(calibration);
 
     // Attach praw file as FileCamera
     utils::AttachedFileCamera fileCamera{factory, prawNames};
@@ -81,8 +81,8 @@ void depthMapInteractive(
     int count = 0;
 
     // Load calibration info
-    auto calibration = loadCalibration();
-    printCalibration(calibration);
+    auto calibration = utils::loadCalibration();
+    utils::printCalibration(calibration);
 
     // Connect to a scanner
     auto device = utils::selectAndConnectDevice(factory);
@@ -100,7 +100,7 @@ void depthMapInteractive(
         utils::triggerScanAndGetFrame(device);
         auto depthMap = getDepthMap(device, calibration);
 
-        auto outputPath = filePrefix + std::to_string(++count) + ".jpg";
+        auto outputPath = filePrefix + std::to_string(++count) + ".tif";
         saveDepthMap(outputPath, depthMap);
     }
 

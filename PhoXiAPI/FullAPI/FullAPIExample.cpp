@@ -23,6 +23,7 @@
     #define DELIMITER "/"
 #endif
 #define LOCAL_CROSS_SLEEP(Millis) std::this_thread::sleep_for(std::chrono::milliseconds(Millis));
+#define INDENT_SIZE ((size_t)4 * indent)
 
 //The whole api is in namespace pho (Photoneo) :: api
 class FullAPIExample
@@ -59,12 +60,12 @@ class FullAPIExample
     void PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string &source);
     void PrintAdditionalCalibrationSettings(const pho::api::PhoXiAdditionalCameraCalibration& CalibrationSettings, const std::string& source);
     void PrintResolution(const pho::api::PhoXiSize& Resolution);
-    void PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation);
-    void PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix);
-    void PrintVector(const std::string &name, const pho::api::Point3_64f &vector);
+    void PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation, int indent = 1);
+    void PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix, int indent = 1);
+    void PrintVector(const std::string &name, const pho::api::Point3_64f &vector, int indent = 1);
     void PrintVirtualCamera(const std::string &Name, const pho::api::PhoXiVirtualCamera &camera);
-    void PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings);
-    void PrintDistortionCoefficients(const std::string &name, const std::vector<double> & distCoeffs);
+    void PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings, int indent = 1);
+    void PrintDistortionCoefficients(const std::string &name, const std::vector<double> &distCoeffs, int indent = 1);
 
     template<class T>
     bool ReadLine(T &Output) const
@@ -1062,6 +1063,10 @@ void FullAPIExample::PrintFrameInfo(const pho::api::PFrame &Frame)
         << std::endl;
     std::cout << "    FilenamePath: " << FrameInfo.FilenamePath << std::endl;
     std::cout << "    HWIdentification: " << FrameInfo.HWIdentification << std::endl;
+    PrintVirtualCamera("CurrentCamera", FrameInfo.CurrentCamera);
+    if (PhoXiDevice->Info().CheckFeature("Color")) {
+        PrintVirtualCamera("CurrentColorCamera", FrameInfo.CurrentColorCamera);
+    }
 }
 
 void FullAPIExample::PrintFrameData(const pho::api::PFrame &Frame)
@@ -1181,7 +1186,7 @@ void FullAPIExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinatesSe
     std::cout << "  CoordinatesSettings: " << std::endl;
     PrintMatrix("CustomRotationMatrix", CoordinatesSettings.CustomTransformation.Rotation);
     PrintVector("CustomTranslationVector", CoordinatesSettings.CustomTransformation.Translation);
-    PrintMatrix("RobotRotationMatrix", CoordinatesSettings.CustomTransformation.Rotation);
+    PrintMatrix("RobotRotationMatrix", CoordinatesSettings.RobotTransformation.Rotation);
     PrintVector("RobotTranslationVector", CoordinatesSettings.RobotTransformation.Translation);
     std::cout << "    CoordinateSpace: "   << std::string(CoordinatesSettings.CoordinateSpace) << std::endl;
     std::cout << "    RecognizeMarkers: "  << CoordinatesSettings.RecognizeMarkers << std::endl;
@@ -1190,10 +1195,16 @@ void FullAPIExample::PrintCoordinatesSettings(const pho::api::PhoXiCoordinatesSe
         << CoordinatesSettings.MarkersSettings.MarkerScale.Width << " x "
         << CoordinatesSettings.MarkersSettings.MarkerScale.Height
         << std::endl;
-    std::cout << "CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
+    std::cout << "    CameraSpace: " << std::string(CoordinatesSettings.CameraSpace) << std::endl;
     PrintVirtualCamera("CurrentCamera", CoordinatesSettings.CurrentCamera);
     PrintVirtualCamera("CurrentPrimaryCamera", CoordinatesSettings.CurrentPrimaryCamera);
     PrintVirtualCamera("CurrentColorCamera", CoordinatesSettings.CurrentColorCamera);
+    PrintVirtualCamera("CustomCamera", CoordinatesSettings.CustomCamera);
+    std::cout << "    MarkerOrtho:" << std::endl;
+    std::cout << "      SamplingDistance: " << CoordinatesSettings.MarkerOrtho.SamplingDistance << std::endl;
+    std::cout << "      DefaultSamplingDistance: " << CoordinatesSettings.MarkerOrtho.DefaultSamplingDistance << std::endl;
+    std::cout << "      OriginDistance: " << CoordinatesSettings.MarkerOrtho.OriginDistance << std::endl;
+    std::cout << "      DefaultOriginDistance: " << CoordinatesSettings.MarkerOrtho.DefaultOriginDistance << std::endl;
 }
 
 void FullAPIExample::PrintCalibrationSettings(const pho::api::PhoXiCalibrationSettings &CalibrationSettings, const std::string &source)
@@ -1216,9 +1227,9 @@ void FullAPIExample::PrintAdditionalCalibrationSettings(const pho::api::PhoXiAdd
     PrintCoordinateTransformation(CalibrationSettings.CoordinateTransformation);
 }
 
-void FullAPIExample::PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation) {
-    PrintMatrix("RotationMatrix", transformation.Rotation);
-    PrintVector("TranslationVector", transformation.Translation);
+void FullAPIExample::PrintCoordinateTransformation(const pho::api::PhoXiCoordinateTransformation& transformation, int indent) {
+    PrintMatrix("RotationMatrix", transformation.Rotation, indent);
+    PrintVector("TranslationVector", transformation.Translation, indent);
 }
 
 void FullAPIExample::PrintResolution(const pho::api::PhoXiSize& Resolution) {
@@ -1229,35 +1240,33 @@ void FullAPIExample::PrintResolution(const pho::api::PhoXiSize& Resolution) {
         << ")" << std::endl;
 }
 
-void FullAPIExample::PrintVector(const std::string &name, const pho::api::Point3_64f &vector)
-{
-    std::cout << "    " << name << ": ["
+void FullAPIExample::PrintVector(const std::string &name, const pho::api::Point3_64f &vector, int indent) {
+    std::cout << std::string(INDENT_SIZE, ' ') << name << ": ["
         << vector.x << "; "
         << vector.y << "; "
         << vector.z << "]"
         << std::endl;
 }
 
-void FullAPIExample::PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix)
-{
+void FullAPIExample::PrintMatrix(const std::string &name, const pho::api::CameraMatrix64f &matrix, int indent) {
     if (matrix.Empty())
     {
-        std::cout << "    " << name << ": [empty]" << std::endl;
+        std::cout << std::string(INDENT_SIZE, ' ') << name << ": [empty]" << std::endl;
     }
     else
     {
-        std::cout << "    " << name << ": "
-            << std::endl << "      ["
+        std::cout << std::string(INDENT_SIZE, ' ') << name << ": "
+            << std::endl << std::string(INDENT_SIZE, ' ') << "  ["
             << matrix[0][0] << ", "
             << matrix[0][1] << ", "
             << matrix[0][2] << "]"
 
-            << std::endl << "      ["
+            << std::endl << std::string(INDENT_SIZE, ' ') << "  ["
             << matrix[1][0] << ", "
             << matrix[1][1] << ", "
             << matrix[1][2] << "]"
 
-            << std::endl << "      ["
+            << std::endl << std::string(INDENT_SIZE, ' ') << "  ["
             << matrix[2][0] << ", "
             << matrix[2][1] << ", "
             << matrix[2][2] << "]"
@@ -1268,45 +1277,46 @@ void FullAPIExample::PrintMatrix(const std::string &name, const pho::api::Camera
 void FullAPIExample::PrintVirtualCamera(const std::string &name, const pho::api::PhoXiVirtualCamera &camera)
 {
     std::cout << "    " << name << ":" << std::endl;
-    std::cout << "    ProjectionMode: " << std::string(camera.ProjectionMode) << std::endl;
-    std::cout << "    OrthogonalSettings: " << camera.OrthogonalSettings.Width << " x " << camera.OrthogonalSettings.Height << std::endl;
-    std::cout << "    Resolution: " << camera.Resolution.Width << " x " << camera.Resolution.Height << std::endl;
-    std::cout << "CoordinateTransformation:" << std::endl;
-    PrintCoordinateTransformation(camera.WorldToCameraCoordinates);
-    PrintPerspectiveSettings(camera.PerspectiveSettings);
+    std::cout << "        ProjectionMode: " << std::string(camera.ProjectionMode) << std::endl;
+    std::cout << "        OrthogonalSettings: " << camera.OrthogonalSettings.Width << " x " << camera.OrthogonalSettings.Height << std::endl;
+    std::cout << "        Resolution: " << camera.Resolution.Width << " x " << camera.Resolution.Height << std::endl;
+    std::cout << "        CoordinateTransformation:" << std::endl;
+    PrintCoordinateTransformation(camera.WorldToCameraCoordinates, 2);
+    PrintPerspectiveSettings(camera.PerspectiveSettings, 2);
 }
 
-void FullAPIExample::PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings)
+void FullAPIExample::PrintPerspectiveSettings(const pho::api::PhoXiPerspectiveSettings &settings, int indent)
 {
-    PrintMatrix("PerspectiveSettings", settings.CameraMatrix);
-    PrintDistortionCoefficients("DistortionCoefficients", settings.DistortionCoefficients);
+    PrintMatrix("PerspectiveSettings", settings.CameraMatrix, indent);
+    PrintDistortionCoefficients("DistortionCoefficients", settings.DistortionCoefficients, indent);
 }
 
-void FullAPIExample::PrintDistortionCoefficients(const std::string& name, const std::vector<double>& distCoeffs)
+void FullAPIExample::PrintDistortionCoefficients(const std::string& name, const std::vector<double>& distCoeffs, int indent)
 {
-    std::cout << "    " << name << ": " << std::endl;
-    std::cout << "      Format is the following: " << std::endl;
-    std::cout << "      (k1, k2, p1, p2[, k3[, k4, k5, k6[, s1, s2, s3, s4[, tx, ty]]]])" << std::endl;
+    std::cout << std::string(INDENT_SIZE, ' ') << name << ": " << std::endl;
+    std::cout << std::string(INDENT_SIZE, ' ') << "  Format is the following : " << std::endl;
+    std::cout << std::string(INDENT_SIZE, ' ') << "  (k1, k2, p1, p2[, k3[, k4, k5, k6[, s1, s2, s3, s4[, tx, ty]]]])" << std::endl;
 
     std::stringstream currentDistCoeffsSS;
     int brackets = 0;
     currentDistCoeffsSS << "(";
-    currentDistCoeffsSS << distCoeffs[0];
-    for (size_t i = 1; i < distCoeffs.size(); ++i)
-    {
-        if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14)
-        {
-            currentDistCoeffsSS << "[";
-            ++brackets;
+    if(distCoeffs.empty()) {
+        currentDistCoeffsSS << "[]";
+    } else {
+        currentDistCoeffsSS << distCoeffs[0];
+        for (size_t i = 1; i < distCoeffs.size(); ++i) {
+            if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14) {
+                currentDistCoeffsSS << "[";
+                ++brackets;
+            }
+            currentDistCoeffsSS << ", " << distCoeffs[i];
         }
-        currentDistCoeffsSS << ", " << distCoeffs[i];
-    }
-    for (int j = 0; j < brackets; ++j)
-    {
-        currentDistCoeffsSS << "]";
+        for (int j = 0; j < brackets; ++j) {
+            currentDistCoeffsSS << "]";
+        }
     }
     currentDistCoeffsSS << ")";
-    std::cout << "      " << currentDistCoeffsSS.str() << std::endl;
+    std::cout << std::string(INDENT_SIZE, ' ') << "  " << currentDistCoeffsSS.str() << std::endl;
 }
 
 void FullAPIExample::Run()

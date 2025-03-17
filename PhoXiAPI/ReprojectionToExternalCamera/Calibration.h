@@ -1,5 +1,5 @@
 #pragma once
-#define PHOXI_OPENCV_SUPPORT
+
 #include <PhoXi.h>
 #include <PhoXiAdditionalCamera.h>
 
@@ -7,14 +7,12 @@
 #include <string>
 #include <vector>
 
-namespace externalCamera {
+namespace reprojectionToExternalCamera {
 
 struct CalibrationSettings {
     double focalLength = 0;
     double pixelSize = 0;
-    std::string markersPositions = std::string();
-
-    static CalibrationSettings load();
+    std::string markersPositionsPath;
 };
 
 struct CalibrationError : public std::runtime_error {
@@ -25,8 +23,8 @@ struct CalibrationError : public std::runtime_error {
  * Perform the actual calibration.
  *
  * @param device the PhoXi device to perform the calibration on
- * @param frames a list of frames from the scanner
- * @param images a list of images from the external camera
+ * @param mainDeviceImages a list of images from the main camera
+ * @param externalDeviceImages a list of images from the external camera
  * @param settings  calibration settings loaded from the Settings folder
  *
  * @returns the calculated calibration
@@ -35,28 +33,17 @@ struct CalibrationError : public std::runtime_error {
  */
 pho::api::AdditionalCameraCalibration calibrate(
         pho::api::PPhoXi device,
-        const std::vector<pho::api::Texture32f>& frames,
-        const std::vector<pho::api::Texture32f>& images,
+        const std::vector<pho::api::Texture32f>& mainDeviceImages,
+        const std::vector<pho::api::Texture32f>& externalDeviceImages,
         const CalibrationSettings& settings);
 
 /**
- * Perform calibration on files specified on commandline
- *
- * @param factory the PhoXi Factory used to create devices
- * @param argc,argv the rest of the commandline containing the calibration files
- */
-void calibrateFromFiles(
-        pho::api::PhoXiFactory& factory,
-        int argc,
-        char* argv[]);
-
-/**
- * Interactively get frames / images from a connected scanner and external
- * camera and perform calibration on them.
+ * Interactively get images from the main and the external camera
+ * and perform calibration on them.
  *
  * @param factory the PhoXi Factory used to create devices
  */
 void calibrateInteractive(
         pho::api::PhoXiFactory& factory);
 
-}  // namespace externalCamera
+}  // namespace reprojectionToExternalCamera

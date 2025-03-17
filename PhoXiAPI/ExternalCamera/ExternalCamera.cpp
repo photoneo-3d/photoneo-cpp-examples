@@ -1,5 +1,4 @@
 #include "ExternalCamera.h"
-#include <PhoXiOpenCVSupport.h>
 
 namespace externalCamera {
 
@@ -19,6 +18,6 @@ cv::Mat ExternalCamera::getColorImage()
     cv::Mat image;
     // TODO implement me
     return image;
-};
+}
 
 } // namespace externalCamera

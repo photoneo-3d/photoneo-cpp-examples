@@ -9,10 +9,12 @@ project (ExternalCameraExample)
 set(CMAKE_RELEASE_POSTFIX "_Release")
 set(CMAKE_DEBUG_POSTFIX "_Debug")
 
-if (UNIX AND NOT APPLE)
+if(UNIX)
     add_compile_options(-std=c++1y)
     add_compile_options(-pthread)
-endif(UNIX AND NOT APPLE)
+else(UNIX)
+    add_compile_options(/MP)
+endif(UNIX)
 
 set(Settings_DIR "${ExternalCameraExample_SOURCE_DIR}/Settings")
 set(Data_DIR "${ExternalCameraExample_SOURCE_DIR}/Data")
@@ -73,6 +75,8 @@ set(SOURCE_LIST
 )
 
 set(PhoXiAPI_ExampleUtils_LIST
+    ${PhoXiAPI_ExampleUtils_DIR}/Calibration.cpp
+    ${PhoXiAPI_ExampleUtils_DIR}/Calibration.h
     ${PhoXiAPI_ExampleUtils_DIR}/Scanner.cpp
     ${PhoXiAPI_ExampleUtils_DIR}/Scanner.h
     ${PhoXiAPI_ExampleUtils_DIR}/FileCamera.cpp
@@ -96,13 +100,15 @@ if (NOT PHO_API_CMAKE_CONFIG_PATH)
     set(PHO_API_CMAKE_CONFIG_PATH "$ENV{PHOXI_CONTROL_PATH}")
 endif()
 
-find_package(PhoXi REQUIRED CONFIG PATHS "${PHO_API_CMAKE_CONFIG_PATH}")
+if(NOT PHO_BUILT_IN_API_IN_EXAMPLES)
+    find_package(PhoXi REQUIRED CONFIG PATHS "${PHO_API_CMAKE_CONFIG_PATH}")
+endif()
 
-if (UNIX AND NOT APPLE)
-    set(OPEN_CV_PATH "$ENV{HOME}/OpenCV")
-else ()
-    set(OPEN_CV_PATH "C:/opencv/build")
-endif ()
+if (UNIX)
+    set(OPEN_CV_PATH "$ENV{HOME}/OpenCV" CACHE PATH "OpenCV library path")
+else (UNIX)
+    set(OPEN_CV_PATH "C:/opencv/build" CACHE PATH "OpenCV library path")
+endif (UNIX)
 
 set(PHO_OPENCV_LIBS "world")
 find_package(OpenCV QUIET COMPONENTS ${PHO_OPENCV_LIBS} PATHS "${OPEN_CV_PATH}")
@@ -149,11 +155,13 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
                 $<$<CONFIG:Debug>:${OPEN_CV_DEBUG_DLL_PATH}>
                 $<TARGET_FILE_DIR:ExternalCameraExample>
         )
-        add_custom_command(TARGET ExternalCameraExample POST_BUILD
+        if(NOT PHOXI_DLL_FOR_EXAMPLE)
+            set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
+        endif(NOT PHOXI_DLL_FOR_EXAMPLE)
+        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<$<CONFIG:Release>:${PHOXI_DLL_RELEASE}>
-                $<$<CONFIG:Debug>:${PHOXI_DLL_DEBUG}>
-                $<TARGET_FILE_DIR:ExternalCameraExample>
+                ${PHOXI_DLL_FOR_EXAMPLE}
+                $<TARGET_FILE_DIR:${PROJECT_NAME}>
         )
     endforeach()
 endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")

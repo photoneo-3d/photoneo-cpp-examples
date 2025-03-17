@@ -140,12 +140,12 @@ connect to one. You can connect to a scanner by pressing the corresponding key.
 After successful connection to scanner the application will ask you whether
 you want to trigger a scan. Press 1 to trigger a scan or 2 to stop the process.
 When the scan arrives the aligned depth map will be calculated and saved in the
-project folder as device_1.jpg.
+project folder as device_1.tif.
 
 The application will ask whether you want to continue the process. You can
 continue the process by pressing 1.
 The next aligned depth maps will be saved as:
-{PROJECT_FOLDER}/device_2.jpg, {PROJECT_FOLDER}/device_3.jpg and so on.
+{PROJECT_FOLDER}/device_2.tif, {PROJECT_FOLDER}/device_3.tif and so on.
 
 
 Color Point Cloud

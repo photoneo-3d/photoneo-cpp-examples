@@ -6,7 +6,7 @@
 
 namespace utils {
 
-std::string selectAvailableDevice(pho::api::PhoXiFactory& factory) {
+std::string selectAvailableDevice(pho::api::PhoXiFactory& factory, const std::string &typeOfDevice) {
     auto deviceList = factory.GetDeviceList();
 
     std::cout << "PhoXi Factory found " << deviceList.size()
@@ -30,12 +30,14 @@ std::string selectAvailableDevice(pho::api::PhoXiFactory& factory) {
         ++i;
     }
 
+    const std::string devicePrefix = typeOfDevice.empty() ? std::string() : (typeOfDevice + " ");
+
     while (true) {
         std::cout << std::endl
-                << "Please enter the index of the device to connect: ";
+                << "Please enter the index of the " << devicePrefix << "device to connect: ";
         std::size_t index;
         if (std::cin >> index) {
-            if (index <= deviceList.size()) {
+            if (index < deviceList.size()) {
                 return std::string(deviceList[index]);
             }
         }
@@ -65,13 +67,15 @@ pho::api::PPhoXi connectDevice(pho::api::PhoXiFactory& factory, const std::strin
     return device;
 }
 
-pho::api::PPhoXi selectAndConnectDevice(pho::api::PhoXiFactory& factory) {
-    auto type = selectAvailableDevice(factory);
+pho::api::PPhoXi selectAndConnectDevice(
+        pho::api::PhoXiFactory& factory, const std::string &typeOfDevice) {
+    auto type = selectAvailableDevice(factory, typeOfDevice);
     return connectDevice(factory, type);
 }
 
 void disconnectOrLogOut(pho::api::PPhoXi device) {
-    if (utils::ask<int>("Do you want to also log out the device out of PhoXiControl when disconnecting?", {
+    if (utils::ask<int>("Do you want to also log out the device " + device->Info().Name +
+            " out of PhoXiControl when disconnecting?", {
         {0, "No"},
         {1, "Yes"}})
     ) {

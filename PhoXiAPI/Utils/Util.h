@@ -109,4 +109,25 @@ inline void saveFrameToPly(pho::api::PFrame& frame, const std::string& path) {
     }
 }
 
+pho::api::Point3_64f multiply(
+        const pho::api::RotationMatrix64f &rotationMatrix, const pho::api::Point3_64f &vector);
+
+pho::api::PhoXiCoordinateTransformation invert(
+        const pho::api::PhoXiCoordinateTransformation &input);
+
+pho::api::PhoXiCoordinateTransformation compose(
+        const pho::api::PhoXiCoordinateTransformation &a,
+        const pho::api::PhoXiCoordinateTransformation &b);
+
 } // namespace utils
+
+
+template <typename T>
+std::ostream& operator<<(std::ostream& os, const pho::api::Mat2D<T>& mat) {
+    for (int32_t y = 0; y < mat.Size.Height; ++y) {
+        for (int32_t x = 0; x < mat.Size.Width; ++x)
+            os << std::to_string(mat[y][x]) << " ";
+        os << std::endl;
+    }
+    return os;
+}

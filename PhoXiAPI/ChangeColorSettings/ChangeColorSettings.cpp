@@ -156,10 +156,41 @@ void ColorAPIExample::ChangeColorSettingsExample()
 	}
 
 	// Change the Gamma settings
-        PhoXiDevice->ColorSettings->Gamma = CurrentColorSettings.Gamma * 1.2;
-        if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
-            throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
-        }
+    PhoXiDevice->ColorSettings->Gamma = CurrentColorSettings.Gamma * 1.2;
+    if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+        throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+    }
+
+    // Change the ROI mode - Standard (aspect ratio similar to primary camera)
+    PhoXiDevice->ColorSettings->ROIMode = pho::api::PhoXiColorROIMode::Standard;
+    if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+        throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+    }
+
+    // Change the ROI mode - Extended (native aspect ratio of color camera)
+    PhoXiDevice->ColorSettings->ROIMode = pho::api::PhoXiColorROIMode::Extended;
+    if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+        throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+    }
+
+    // Set Custom ROI
+    // - Values must be multiples of 6 (other values will be floored to the nearest multiple of 6)
+    // - Values Min must be smaller than Max values
+    // - Values are offset from the Extended aspect ratio
+    pho::api::PhoXi2DROI Roi;
+    Roi.Min.x = 60;
+    Roi.Min.y = 60;
+    Roi.Max.x = 600;
+    Roi.Max.y = 600;
+    PhoXiDevice->ColorSettings->ROI = Roi;
+    if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+        throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+    }
+    PhoXiDevice->ColorSettings->ROIMode = pho::api::PhoXiColorROIMode::Custom;
+    if (!PhoXiDevice->ColorSettings.isLastOperationSuccessful()) {
+        throw std::runtime_error(PhoXiDevice->ColorSettings.GetLastErrorMessage().c_str());
+    }
+
 
 	std::cout << "Settings after set up:" << std::endl;
 	PrintColorSettings(PhoXiDevice->ColorSettings);
@@ -257,9 +288,14 @@ void ColorAPIExample::PrintColorSettings(const pho::api::PhoXiColorSettings &Col
 	std::cout << "    Resolution: Width:  " << ColorSettings.CapturingMode.Resolution.Width << std::endl;
 	std::cout << "                Height: " << ColorSettings.CapturingMode.Resolution.Height << std::endl;
 	std::cout << "    WhiteBalancePreset: " << ColorSettings.WhiteBalance.Preset << std::endl;
-	std::cout << "    WhiteBalance:    R: " << ColorSettings.WhiteBalance.BalanceRGB.x << std::endl;
-	std::cout << "    WhiteBalance:    G: " << ColorSettings.WhiteBalance.BalanceRGB.y << std::endl;
-	std::cout << "    WhiteBalance:    B: " << ColorSettings.WhiteBalance.BalanceRGB.z << std::endl;
+	std::cout << "    WhiteBalance: R:    " << ColorSettings.WhiteBalance.BalanceRGB.x << std::endl;
+	std::cout << "                  G:    " << ColorSettings.WhiteBalance.BalanceRGB.y << std::endl;
+	std::cout << "                  B:    " << ColorSettings.WhiteBalance.BalanceRGB.z << std::endl;
+    std::cout << "    ROIMode:            " << ColorSettings.ROIMode << std::endl;
+    std::cout << "    ROI: Min X:         " << ColorSettings.ROI.Min.x << std::endl;
+    std::cout << "         Min Y:         " << ColorSettings.ROI.Min.y << std::endl;
+    std::cout << "         Max X:         " << ColorSettings.ROI.Max.x << std::endl;
+    std::cout << "         Max Y:         " << ColorSettings.ROI.Max.y << std::endl;
 }
 
 void ColorAPIExample::Run()

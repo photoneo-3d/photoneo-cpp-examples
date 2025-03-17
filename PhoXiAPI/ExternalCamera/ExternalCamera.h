@@ -1,4 +1,5 @@
 #pragma once
+#define PHOXI_OPENCV_SUPPORT
 #include <PhoXi.h>
 #include <opencv2/core.hpp>
 

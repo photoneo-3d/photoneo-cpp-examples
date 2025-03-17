@@ -12,10 +12,10 @@ project (TwoScannersExample)
 set(CMAKE_RELEASE_POSTFIX "_Release")
 set(CMAKE_DEBUG_POSTFIX "_Debug")
 
-if (UNIX AND NOT APPLE)
+if (UNIX)
     add_compile_options(-std=c++1y)
     add_compile_options(-pthread)
-endif(UNIX AND NOT APPLE)
+endif(UNIX)
 
 set(Files
     ${TwoScannersExample_SOURCE_DIR}/TwoScannersExample.cpp
@@ -30,7 +30,9 @@ if (NOT PHO_API_CMAKE_CONFIG_PATH)
     set(PHO_API_CMAKE_CONFIG_PATH "$ENV{PHOXI_CONTROL_PATH}")
 endif()
 
-find_package(PhoXi REQUIRED CONFIG PATHS "${PHO_API_CMAKE_CONFIG_PATH}")
+if(NOT PHO_BUILT_IN_API_IN_EXAMPLES)
+    find_package(PhoXi REQUIRED CONFIG PATHS "${PHO_API_CMAKE_CONFIG_PATH}")
+endif()
 
 target_link_libraries(TwoScannersExample
     ${PHOXI_LIBRARY}
@@ -40,14 +42,16 @@ target_link_libraries(TwoScannersExample
 get_target_property(ReleaseBinFolder TwoScannersExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
 get_target_property(DebugBinFolder TwoScannersExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    add_custom_command(TARGET TwoScannersExample POST_BUILD
+if(MSVC)
+    if(NOT PHOXI_DLL_FOR_EXAMPLE)
+        set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
+    endif(NOT PHOXI_DLL_FOR_EXAMPLE)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
-            $<$<CONFIG:Release>:${PHOXI_DLL_RELEASE}>
-            $<$<CONFIG:Debug>:${PHOXI_DLL_DEBUG}>
-            $<TARGET_FILE_DIR:TwoScannersExample>
+            ${PHOXI_DLL_FOR_EXAMPLE}
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
-endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+endif(MSVC)
 
 target_include_directories (TwoScannersExample PUBLIC ${PHOXI_INCLUDE_DIRS})
 
