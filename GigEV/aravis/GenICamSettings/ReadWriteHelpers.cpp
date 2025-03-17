@@ -225,29 +225,28 @@ bool ReadWriteHelper::testEnumFeature(const std::string& nodeName, const AccessT
         return true;
     }
 
-    if (access == WO || access == RW) {
-        std::cout << "  -> changing to: " << val << std::endl;
+    std::cout << "  -> changing to: " << val << std::endl;
 
-        // setter for enum values:
-        //arv_camera_set_integer(_camera, nodeName.c_str(), val, &error);
-        arv_camera_set_string(_camera, nodeName.c_str(), val.c_str(), &error);
-        if (error) {
-            return handleError(error);
-        }
+    // setter for enum values:
+    //arv_camera_set_integer(_camera, nodeName.c_str(), val, &error);
+    arv_camera_set_string(_camera, nodeName.c_str(), val.c_str(), &error);
+    if (error) {
+        return handleError(error);
     }
 
-    if (access == RO || access == RW) {
+    if(access == RW) {
         const auto afterEnumVal = arv_camera_get_integer(_camera, nodeName.c_str(), &error);
-        if (error) {
+        if(error) {
             return handleError(error);
         }
         const auto afterStrVal = arv_camera_get_string(_camera, nodeName.c_str(), &error);
-        if (error) {
+        if(error) {
             return handleError(error);
         }
 
         std::cout << "[" << nodeName << "] AFTER: " << afterStrVal << "(" << afterEnumVal << ")" << std::endl;
     }
+
     return true;
 }
 
@@ -269,18 +268,12 @@ std::vector<uint8_t> ReadWriteHelper::getBuffer(const std::string& nodeName) {
     ArvGcNode* node = arv_gc_get_node(genicam, nodeName.c_str());
 
     GError* error = nullptr;
-    gint64 address = arv_gc_register_get_address(ARV_GC_REGISTER(node), &error);
-    if (error) {
-        handleError(error);
-        return {};
-    }
-    std::cerr << "[" << nodeName << "] address = " << address << std::endl;
     guint64 length = arv_gc_register_get_length(ARV_GC_REGISTER(node), &error);
     if (error) {
         handleError(error);
         return {};
     }
-    std::cerr << "[" << nodeName << "] length = " << length << std::endl;
+
     std::vector<uint8_t> buffer(length);
     arv_gc_register_get(ARV_GC_REGISTER(node), &buffer[0], length, &error);
     if (error) {
