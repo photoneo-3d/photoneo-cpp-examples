@@ -55,3 +55,8 @@ generate_example_app(UserSets
     SOURCES
         UserSets/main.cpp
 )
+
+generate_example_app(ToggleJumboFrames
+    SOURCES
+        ToggleJumboFrames/main.cpp
+)
