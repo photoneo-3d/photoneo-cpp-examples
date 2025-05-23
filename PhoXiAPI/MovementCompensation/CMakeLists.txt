@@ -19,7 +19,7 @@ endif(UNIX)
 set(Data_DIR "${MovementCompensationExample_SOURCE_DIR}/Data")
 
 if (PHO_DOWNLOAD_API_EXAMPLES_DATA)
-    set(DATA_URL "https://photoneo.com/files/installer/PhoXi/api/movement_compensation_example_1.0.zip")
+    set(DATA_URL "https://photoneo.com/files/dw/dw/pxc/API/movement_compensation_example_1.0.zip")
     set(DATA_DOWNLOAD_PATH "${MovementCompensationExample_BINARY_DIR}/movement_compensation_example_1.0.zip")
     
     if (NOT EXISTS "${DATA_DIR}" AND NOT EXISTS "${DATA_DOWNLOAD_PATH}")

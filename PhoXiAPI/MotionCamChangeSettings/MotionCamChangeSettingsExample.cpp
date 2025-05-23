@@ -469,8 +469,11 @@ void MotionCamExample::PrintMotionCamGeneral(const pho::api::PhoXiMotionCam &Mot
     std::cout << "    OperationMode: "      << std::string(MotionCam.OperationMode) << std::endl;
     std::cout << "    LaserPower: "         << MotionCam.LaserPower << std::endl;
     std::cout << "    LEDPower: "           << MotionCam.LEDPower << std::endl;
+    std::cout << "    ISO: "                << MotionCam.Iso << std::endl;
     std::cout << "    MaximumFPS: "         << MotionCam.MaximumFPS << std::endl;
     std::cout << "    HardwareTrigger: "    << MotionCam.HardwareTrigger << std::endl;
+    std::cout << "    ProjectionOffsetLeft: "  << MotionCam.ProjectionOffsetLeft << std::endl;
+    std::cout << "    ProjectionOffsetRight: " << MotionCam.ProjectionOffsetRight << std::endl;
 }
 
 void MotionCamExample::PrintMotionCamCameraMode(const pho::api::PhoXiMotionCamCameraMode &CameraMode) const {

@@ -113,7 +113,7 @@ endif (UNIX)
 set(PHO_OPENCV_LIBS "world")
 find_package(OpenCV QUIET COMPONENTS ${PHO_OPENCV_LIBS} PATHS "${OPEN_CV_PATH}")
 
-if (NOT ${OPENCV_WORLD_FOUND})
+if (NOT EXISTS ${OPENCV_WORLD_FOUND})
     set(PHO_OPENCV_LIBS "core;imgcodecs;imgproc")
     find_package(OpenCV REQUIRED COMPONENTS ${PHO_OPENCV_LIBS} PATHS "${OPEN_CV_PATH}")
 endif()
@@ -134,21 +134,22 @@ target_link_libraries(ExternalCameraExample
 get_target_property(ReleaseBinFolder ExternalCameraExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
 get_target_property(DebugBinFolder ExternalCameraExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
 
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+set(PHO_COPY_EXAMPLE_DEPENDENCIES ON CACHE BOOL "Copy dependencies at post build")
+if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND PHO_COPY_EXAMPLE_DEPENDENCIES)
     if(MSVC_TOOLSET_VERSION GREATER_EQUAL 140)
         set(PHO_COMPILER_VERSION "vc14")
     elseif(MSVC_TOOLSET_VERSION EQUAL 120)
         set(PHO_COMPILER_VERSION "vc12")
     endif()
-    
+
     foreach(PHO_OPENCV_LIB ${PHO_OPENCV_LIBS})
         set(OPEN_CV_RELEASE_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310.dll")
         set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310d.dll")
-        
+
         if (NOT EXISTS ${OPEN_CV_DEBUG_DLL_PATH})
             set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310-gd.dll")
         endif()
-        
+
         add_custom_command(TARGET ExternalCameraExample POST_BUILD
             COMMAND ${CMAKE_COMMAND} -E copy_if_different
                 $<$<CONFIG:Release>:${OPEN_CV_RELEASE_DLL_PATH}>
@@ -164,7 +165,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
                 $<TARGET_FILE_DIR:${PROJECT_NAME}>
         )
     endforeach()
-endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+endif()
 
 target_include_directories(ExternalCameraExample PUBLIC ${PHOXI_INCLUDE_DIRS})
 

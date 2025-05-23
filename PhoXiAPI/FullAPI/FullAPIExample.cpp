@@ -1067,6 +1067,7 @@ void FullAPIExample::PrintFrameInfo(const pho::api::PFrame &Frame)
     if (PhoXiDevice->Info().CheckFeature("Color")) {
         PrintVirtualCamera("CurrentColorCamera", FrameInfo.CurrentColorCamera);
     }
+    std::cout << "    Marker dot status: " << FrameInfo.MarkerDots.Status << std::endl;
 }
 
 void FullAPIExample::PrintFrameData(const pho::api::PFrame &Frame)
@@ -1151,6 +1152,7 @@ void FullAPIExample::PrintCapturingSettings(const pho::api::PhoXiCapturingSettin
     std::cout << "    MaximumFPS: "              << CapturingSettings.MaximumFPS << std::endl;
     std::cout << "    LaserPower: "              << CapturingSettings.LaserPower << std::endl;
     std::cout << "    LEDPower: "                << CapturingSettings.LEDPower << std::endl;
+    std::cout << "    ISO: "                     << CapturingSettings.Iso << std::endl;
     std::cout << "    ProjectionOffsetLeft: "    << CapturingSettings.ProjectionOffsetLeft << std::endl;
     std::cout << "    ProjectionOffsetRight: "   << CapturingSettings.ProjectionOffsetRight << std::endl;
     std::cout << "    HardwareTrigger: "         << CapturingSettings.HardwareTrigger << std::endl;

@@ -164,6 +164,7 @@ void ReadPointCloudExample::PrintFrameInfo(const pho::api::PFrame &Frame) {
               << std::endl;
     std::cout << "    FilenamePath: " << FrameInfo.FilenamePath << std::endl;
     std::cout << "    HWIdentification: " << FrameInfo.HWIdentification << std::endl;
+    std::cout << "    Marker dot status: " << FrameInfo.MarkerDots.Status << std::endl;
 }
 
 void ReadPointCloudExample::PrintFrameData(const pho::api::PFrame &Frame) {

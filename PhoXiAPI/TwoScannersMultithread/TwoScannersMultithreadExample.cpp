@@ -242,6 +242,7 @@ void TwoScannersMultithreadExample::PrintFrameInfo(
               << std::endl;
     std::cout << "    FilenamePath: " << FrameInfo.FilenamePath << std::endl;
     std::cout << "    HWIdentification: " << FrameInfo.HWIdentification << std::endl;
+    std::cout << "    Marker dot status: " << FrameInfo.MarkerDots.Status << std::endl;
 }
 
 void TwoScannersMultithreadExample::PrintFrameData(

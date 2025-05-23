@@ -43,7 +43,7 @@ endif (UNIX)
 set(PHO_OPENCV_LIBS "world")
 find_package(OpenCV QUIET COMPONENTS ${PHO_OPENCV_LIBS} PATHS "${OPEN_CV_PATH}")
 
-if (NOT ${OPENCV_WORLD_FOUND})
+if (NOT EXISTS ${OPENCV_WORLD_FOUND})
     set(PHO_OPENCV_LIBS "core;imgcodecs;imgproc")
     find_package(OpenCV REQUIRED COMPONENTS ${PHO_OPENCV_LIBS} PATHS "${OPEN_CV_PATH}")
 endif()
@@ -61,7 +61,8 @@ target_link_libraries(ApplyCustomProjectionExample
     $<$<PLATFORM_ID:Linux>:rt>
 )
 
-if(MSVC)
+set(PHO_COPY_EXAMPLE_DEPENDENCIES ON CACHE BOOL "Copy dependencies at post build")
+if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND PHO_COPY_EXAMPLE_DEPENDENCIES)
     foreach(PHO_OPENCV_LIB ${PHO_OPENCV_LIBS})
         set(OPEN_CV_RELEASE_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310.dll")
         set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310d.dll")

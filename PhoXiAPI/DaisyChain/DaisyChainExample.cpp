@@ -347,6 +347,7 @@ void printFrameInfo(const pho::api::PFrame &Frame)
         << std::endl;
     std::cout << "   FilenamePath: " << FrameInfo.FilenamePath << std::endl;
     std::cout << "   HWIdentification: " << FrameInfo.HWIdentification << std::endl;
+    std::cout << "   Marker dot status: " << FrameInfo.MarkerDots.Status << std::endl;
 }
 
 void printFrameData(const pho::api::PFrame &Frame)

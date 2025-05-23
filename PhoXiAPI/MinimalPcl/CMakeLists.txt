@@ -27,8 +27,6 @@ add_executable (MinimalPclExample
     ${Files}
 )
 
-# set(ThirdPartyDIR "/path/to/your/3rd/party/libraries/directory")
-
 if (NOT PHO_API_CMAKE_CONFIG_PATH)
     set(PHO_API_CMAKE_CONFIG_PATH "$ENV{PHOXI_CONTROL_PATH}")
 endif()
@@ -37,19 +35,32 @@ if(NOT PHO_BUILT_IN_API_IN_EXAMPLES)
     find_package(PhoXi REQUIRED CONFIG PATHS "${PHO_API_CMAKE_CONFIG_PATH}")
 endif()
 
-if (UNIX)
-    set(PCL_PATH "$ENV{HOME}/pcl-1.8.0/share/pcl-1.8" CACHE PATH "PCL library path")
-else (UNIX)
-    set(PCL_PATH "C:/pcl-1.8.0/cmake" CACHE PATH "PCL library path")
-endif (UNIX)
-
-find_package(PCL 1.8.0 EXACT REQUIRED PATHS "${PCL_PATH}")
-
 target_link_libraries(MinimalPclExample
     ${PHOXI_LIBRARY}
-    ${PCL_COMMON_LIBRARIES}
     $<$<PLATFORM_ID:Linux>:rt>
 )
+target_include_directories(MinimalPclExample PUBLIC
+    ${PHOXI_INCLUDE_DIRS}
+)
+
+if(TARGET PCL::PCL)
+    target_link_libraries(MinimalPclExample
+        PCL::PCL
+    )
+else()
+    if(UNIX)
+        set(PCL_PATH "$ENV{HOME}/pcl-1.8.0/share/pcl-1.8" CACHE PATH "PCL library path")
+    else()
+        set(PCL_PATH "C:/pcl-1.8.0/cmake" CACHE PATH "PCL library path")
+    endif()
+    find_package(PCL 1.8.0 EXACT REQUIRED PATHS "${PCL_PATH}")
+    target_link_libraries(MinimalPclExample
+        ${PCL_COMMON_LIBRARIES}
+    )
+    target_include_directories(MinimalPclExample PUBLIC
+        ${PCL_INCLUDE_DIRS}
+    )
+endif()
 
 get_target_property(ReleaseBinFolder MinimalPclExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
 get_target_property(DebugBinFolder MinimalPclExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
@@ -57,18 +68,13 @@ get_target_property(DebugBinFolder MinimalPclExample RUNTIME_OUTPUT_DIRECTORY_DE
 if(MSVC)
     if(NOT PHOXI_DLL_FOR_EXAMPLE)
         set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
-    endif(NOT PHOXI_DLL_FOR_EXAMPLE)
+    endif()
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${PHOXI_DLL_FOR_EXAMPLE}
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
-endif(MSVC)
-
-target_include_directories(MinimalPclExample PUBLIC
-    ${PHOXI_INCLUDE_DIRS}
-    ${PCL_INCLUDE_DIRS}
-)
+endif()
 
 set_target_properties(MinimalPclExample
     PROPERTIES
