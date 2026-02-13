@@ -5,9 +5,9 @@
 * and reproject depth map to this custom space and save it.
 */
 
+#define PHOXI_OPENCV_SUPPORT
 #include "PhoXi.h"
 #include <opencv2/opencv.hpp>
-#include "PhoXiOpenCVSupport.h"
 
 //The whole api is in namespace pho (Photoneo) :: api
 class ApplyCustomProjectionExample {

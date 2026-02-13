@@ -60,10 +60,7 @@ target_link_libraries(ReprojectionToExternalCameraExample
     $<$<PLATFORM_ID:Linux>:rt>
 )
 
-get_target_property(ReleaseBinFolder ReprojectionToExternalCameraExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
-get_target_property(DebugBinFolder ReprojectionToExternalCameraExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
-
-if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+if(MSVC)
     if(NOT PHOXI_DLL_FOR_EXAMPLE)
         set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
     endif(NOT PHOXI_DLL_FOR_EXAMPLE)
@@ -72,7 +69,7 @@ if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
             ${PHOXI_DLL_FOR_EXAMPLE}
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
-endif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+endif(MSVC)
 
 target_include_directories(ReprojectionToExternalCameraExample PUBLIC ${PHOXI_INCLUDE_DIRS})
 

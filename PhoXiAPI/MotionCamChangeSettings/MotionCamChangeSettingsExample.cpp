@@ -239,7 +239,7 @@ void MotionCamExample::ChangeMotionCamScannerModeExample() {
     //CodingQuality values: Fast / High / Ultra
     CurrentScannerMode.CodingQuality = pho::api::PhoXiCodingQuality::Fast;
 
-    //TextureSource values: LED / Computed / Laser / Focus / Color
+    //TextureSource values: LED / Computed / Computed (Enhanced) / Laser / Laser (Enhanced) / Focus / Color
     CurrentScannerMode.TextureSource = pho::api::PhoXiTextureSource::LED;
 
     //Get all supported values
@@ -604,7 +604,7 @@ void MotionCamExample::PrintDistortionCoefficients(const std::string &name, cons
      int brackets = 0;
      currentDistCoeffsSS << "(";
      currentDistCoeffsSS << distCoeffs[0];
-     for (int i = 1; i < distCoeffs.size(); ++i) {
+     for (size_t i = 1; i < distCoeffs.size(); ++i) {
         if (i == 4 || i == 5 || i == 8 || i == 12 || i == 14) {
             currentDistCoeffsSS << "[";
             ++brackets;

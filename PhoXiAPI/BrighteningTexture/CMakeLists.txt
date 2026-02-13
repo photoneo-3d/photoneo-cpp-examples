@@ -45,7 +45,7 @@ if(MSVC)
             ${PHOXI_DLL_FOR_EXAMPLE}
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
-endif()
+endif(MSVC)
 
 target_include_directories(BrighteningTextureExample PUBLIC
     ${PHOXI_INCLUDE_DIRS}

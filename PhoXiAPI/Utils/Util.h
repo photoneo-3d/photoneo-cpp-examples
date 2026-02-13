@@ -101,7 +101,7 @@ Value ask(
 
 
 inline void saveFrameToPly(pho::api::PFrame& frame, const std::string& path) {
-    if (frame->SaveAsPly(path)) {
+    if (frame->SaveAsPly(path, pho::api::Frame::SaveAsPlyOptions().EnableAll())) {
         std::cout << "Saved frame as PLY to: " << path << std::endl;
     }
     else {

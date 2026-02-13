@@ -40,9 +40,6 @@ target_link_libraries(DaisyChainExample
     $<$<PLATFORM_ID:Linux>:rt>
 )
 
-get_target_property(ReleaseBinFolder DaisyChainExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
-get_target_property(DebugBinFolder DaisyChainExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
-
 if(MSVC)
     if(NOT PHOXI_DLL_FOR_EXAMPLE)
         set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})

@@ -142,7 +142,7 @@ pho::api::Mat2D<pho::api::ColorRGB_16> colorPointCloudTexture(
 void saveColorPointCloud(
         const std::string& path,
         const pho::api::PFrame frame) {
-    if (!frame->SaveAsPly(path, true, true))
+    if (!frame->SaveAsPly(path, pho::api::Frame::SaveAsPlyOptions().EnablePointCloud()))
         throw std::runtime_error(
                 "Failed saving point cloud with color texture to file " + path);
 

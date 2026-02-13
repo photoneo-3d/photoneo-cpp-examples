@@ -8,8 +8,7 @@ namespace jointMarkerSpace {
 void savePointCloud(
         const std::string& path,
         const pho::api::PFrame frame) {
-    if (!frame->SaveAsPly(
-            path, true, true, true, true, true, true, true, true /*unordered*/, false /*metadata*/)) {
+    if (!frame->SaveAsPly(path, pho::api::Frame::SaveAsPlyOptions().EnableAll().EnableUnordered().EnableMetadata(false))) {
         throw std::runtime_error(
                 "Failed saving point cloud to file " + path);
     }

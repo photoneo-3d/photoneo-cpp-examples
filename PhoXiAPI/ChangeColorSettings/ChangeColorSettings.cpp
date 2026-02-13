@@ -40,8 +40,8 @@ private:
 	}
 
 public:
-	ColorAPIExample() = default;;
-	~ColorAPIExample() = default;;
+	ColorAPIExample() = default;
+	~ColorAPIExample() = default;
 	void Run();
 };
 

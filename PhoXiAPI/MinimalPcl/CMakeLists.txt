@@ -48,33 +48,31 @@ if(TARGET PCL::PCL)
         PCL::PCL
     )
 else()
-    if(UNIX)
-        set(PCL_PATH "$ENV{HOME}/pcl-1.8.0/share/pcl-1.8" CACHE PATH "PCL library path")
+    find_package(PCL REQUIRED)
+    if(TARGET PCL::PCL)
+        target_link_libraries(MinimalPclExample
+            PCL::PCL
+        )
     else()
-        set(PCL_PATH "C:/pcl-1.8.0/cmake" CACHE PATH "PCL library path")
+        target_link_libraries(MinimalPclExample
+            ${PCL_COMMON_LIBRARIES}
+        )
+        target_include_directories(MinimalPclExample PUBLIC
+            ${PCL_INCLUDE_DIRS}
+        )
     endif()
-    find_package(PCL 1.8.0 EXACT REQUIRED PATHS "${PCL_PATH}")
-    target_link_libraries(MinimalPclExample
-        ${PCL_COMMON_LIBRARIES}
-    )
-    target_include_directories(MinimalPclExample PUBLIC
-        ${PCL_INCLUDE_DIRS}
-    )
 endif()
-
-get_target_property(ReleaseBinFolder MinimalPclExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
-get_target_property(DebugBinFolder MinimalPclExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
 
 if(MSVC)
     if(NOT PHOXI_DLL_FOR_EXAMPLE)
         set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
-    endif()
+    endif(NOT PHOXI_DLL_FOR_EXAMPLE)
     add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different
             ${PHOXI_DLL_FOR_EXAMPLE}
             $<TARGET_FILE_DIR:${PROJECT_NAME}>
     )
-endif()
+endif(MSVC)
 
 set_target_properties(MinimalPclExample
     PROPERTIES

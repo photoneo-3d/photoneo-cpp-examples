@@ -333,7 +333,7 @@ void ReadPointCloudExample::DataHandlingExample() {
             OutputFolder.empty() ? std::string() : OutputFolder + DELIMITER;
     const auto sampleFramePly = outputFolder + "SampleFrame.ply";
     std::cout << "Saving frame as 'SampleFrame.ply'" << std::endl;
-    if (SampleFrame->SaveAsPly(sampleFramePly, true, true)) {
+    if (SampleFrame->SaveAsPly(sampleFramePly, pho::api::Frame::SaveAsPlyOptions().EnablePointCloud())) {
         std::cout << "Saved sample frame as PLY to: " << sampleFramePly
                   << std::endl;
     } else {

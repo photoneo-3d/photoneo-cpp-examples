@@ -131,41 +131,34 @@ target_link_libraries(ExternalCameraExample
     $<$<PLATFORM_ID:Linux>:rt>
 )
 
-get_target_property(ReleaseBinFolder ExternalCameraExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
-get_target_property(DebugBinFolder ExternalCameraExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
-
 set(PHO_COPY_EXAMPLE_DEPENDENCIES ON CACHE BOOL "Copy dependencies at post build")
-if (("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC") AND PHO_COPY_EXAMPLE_DEPENDENCIES)
-    if(MSVC_TOOLSET_VERSION GREATER_EQUAL 140)
-        set(PHO_COMPILER_VERSION "vc14")
-    elseif(MSVC_TOOLSET_VERSION EQUAL 120)
-        set(PHO_COMPILER_VERSION "vc12")
-    endif()
+if (MSVC)
+    if(NOT PHOXI_DLL_FOR_EXAMPLE)
+        set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
+    endif(NOT PHOXI_DLL_FOR_EXAMPLE)
+    add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different
+            ${PHOXI_DLL_FOR_EXAMPLE}
+            $<TARGET_FILE_DIR:${PROJECT_NAME}>
+    )
+    if(PHO_COPY_EXAMPLE_DEPENDENCIES)
+        foreach(PHO_OPENCV_LIB ${PHO_OPENCV_LIBS})
+            set(OPEN_CV_RELEASE_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310.dll")
+            set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310d.dll")
 
-    foreach(PHO_OPENCV_LIB ${PHO_OPENCV_LIBS})
-        set(OPEN_CV_RELEASE_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310.dll")
-        set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310d.dll")
+            if (NOT EXISTS ${OPEN_CV_DEBUG_DLL_PATH})
+                set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310-gd.dll")
+            endif()
 
-        if (NOT EXISTS ${OPEN_CV_DEBUG_DLL_PATH})
-            set(OPEN_CV_DEBUG_DLL_PATH "${OPEN_CV_BIN_PATH}/opencv_${PHO_OPENCV_LIB}310-gd.dll")
-        endif()
-
-        add_custom_command(TARGET ExternalCameraExample POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                $<$<CONFIG:Release>:${OPEN_CV_RELEASE_DLL_PATH}>
-                $<$<CONFIG:Debug>:${OPEN_CV_DEBUG_DLL_PATH}>
-                $<TARGET_FILE_DIR:ExternalCameraExample>
-        )
-        if(NOT PHOXI_DLL_FOR_EXAMPLE)
-            set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})
-        endif(NOT PHOXI_DLL_FOR_EXAMPLE)
-        add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-            COMMAND ${CMAKE_COMMAND} -E copy_if_different
-                ${PHOXI_DLL_FOR_EXAMPLE}
-                $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        )
-    endforeach()
-endif()
+            add_custom_command(TARGET ExternalCameraExample POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                    $<$<CONFIG:Release>:${OPEN_CV_RELEASE_DLL_PATH}>
+                    $<$<CONFIG:Debug>:${OPEN_CV_DEBUG_DLL_PATH}>
+                    $<TARGET_FILE_DIR:ExternalCameraExample>
+            )
+        endforeach()
+    endif(PHO_COPY_EXAMPLE_DEPENDENCIES)
+endif(MSVC)
 
 target_include_directories(ExternalCameraExample PUBLIC ${PHOXI_INCLUDE_DIRS})
 

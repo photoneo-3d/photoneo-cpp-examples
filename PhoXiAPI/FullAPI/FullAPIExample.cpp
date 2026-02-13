@@ -492,7 +492,7 @@ void FullAPIExample::BasicDeviceStateExample()
 
     if (PhoXiDevice->CameraBinning.isEnabled() && PhoXiDevice->OutputSettings.CanGet())
     {
-        pho::api::PhoXiSize binning = PhoXiDevice->CameraBinning;
+        pho::api::PhoXiSize_64f binning = PhoXiDevice->CameraBinning;
         if (!PhoXiDevice->CameraBinning.isLastOperationSuccessful())
         {
             throw std::runtime_error(PhoXiDevice->CameraBinning.GetLastErrorMessage().c_str());
@@ -962,7 +962,7 @@ void FullAPIExample::DataHandlingExample()
     const auto outputFolder = OutputFolder.empty() ? std::string() : OutputFolder + DELIMITER;
     const auto sampleFramePly = outputFolder + "SampleFrame.ply";
     std::cout << "Saving frame as 'SampleFrame.ply'" << std::endl;
-    if (SampleFrame->SaveAsPly(sampleFramePly, true, true))
+    if (SampleFrame->SaveAsPly(sampleFramePly, pho::api::Frame::SaveAsPlyOptions().EnablePointCloud()))
     {
         std::cout << "Saved sample frame as PLY to: " << sampleFramePly << std::endl;
     }
@@ -1153,6 +1153,7 @@ void FullAPIExample::PrintCapturingSettings(const pho::api::PhoXiCapturingSettin
     std::cout << "    LaserPower: "              << CapturingSettings.LaserPower << std::endl;
     std::cout << "    LEDPower: "                << CapturingSettings.LEDPower << std::endl;
     std::cout << "    ISO: "                     << CapturingSettings.Iso << std::endl;
+    std::cout << "    HDR: "                     << std::string(CapturingSettings.Hdr) << std::endl;
     std::cout << "    ProjectionOffsetLeft: "    << CapturingSettings.ProjectionOffsetLeft << std::endl;
     std::cout << "    ProjectionOffsetRight: "   << CapturingSettings.ProjectionOffsetRight << std::endl;
     std::cout << "    HardwareTrigger: "         << CapturingSettings.HardwareTrigger << std::endl;

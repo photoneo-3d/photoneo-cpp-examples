@@ -231,7 +231,7 @@ void dumpDelays(const std::vector<Result> &Results) {
     std::vector<FramePTPGroups> groups;
 
     // reorder PTP times
-    for (int r = 0; r < Results.size(); r++) {
+    for (size_t r = 0; r < Results.size(); r++) {
         if (groups.empty()) {
             groups.resize(Results[r].frames.size());
         }
@@ -239,7 +239,7 @@ void dumpDelays(const std::vector<Result> &Results) {
             std::cout << "The devices did not trigger the same number of frames" << std::endl;
             return;
         }
-        for (int f = 0; f < Results[r].frames.size(); f++) {
+        for (size_t f = 0; f < Results[r].frames.size(); f++) {
             pho::api::PhoXiPTPTime ptpTime = Results[r].frames[f]->Info.FrameStartTime;
             groups[f].times.push_back(ptpTime);
         }
@@ -255,7 +255,7 @@ void dumpDelays(const std::vector<Result> &Results) {
     for (const FramePTPGroups& group : groups) {
         // find the lowest timestamp
         pho::api::PhoXiPTPTime zeroTime = group.times[0];
-        for (int d = 1; d < group.times.size(); d++) {
+        for (size_t d = 1; d < group.times.size(); d++) {
 
             if (calcDelta(zeroTime, group.times[d]).count() > 0) {
                 zeroTime = group.times[d];

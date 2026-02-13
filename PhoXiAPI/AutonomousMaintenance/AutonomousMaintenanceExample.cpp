@@ -113,19 +113,35 @@ int main(int argc, char *argv[])
     }
     std::cout << std::endl << std::endl;
 
-    //Check if the MotionCam are Enabled and Can be Set
-    if (!phoXiDevice->MotionCam.isEnabled() || !phoXiDevice->MotionCam.CanSet() || !phoXiDevice->MotionCam.CanGet())
+    switch (phoXiDevice->GetType())
     {
-        std::cout << "MotionCam not supported by the Device Hardware, or are Read only on the specific device" << std::endl;
-        return 0;
+        case pho::api::PhoXiDeviceType::MotionCam3D:
+        {
+            phoXiDevice->MotionCam->MaintenanceMode = pho::api::PhoXiMaintenanceMode::Auto;
+            if (phoXiDevice->MotionCam->MaintenanceMode != pho::api::PhoXiMaintenanceMode::Auto)
+            {
+                std::cout << "Device does not support MaintenanceMode" << std::endl;
+                return 0;
+            }
+            break;
+        }
+        case pho::api::PhoXiDeviceType::PhoXiScanner:
+        {
+            phoXiDevice->CapturingSettings->MaintenanceMode = pho::api::PhoXiMaintenanceMode::Auto;
+            if (phoXiDevice->CapturingSettings->MaintenanceMode != pho::api::PhoXiMaintenanceMode::Auto)
+            {
+                std::cout << "Device does not support MaintenanceMode" << std::endl;
+                return 0;
+            }
+            break;
+        }
+        default:
+        {
+            std::cout << "Device does not support MaintenanceMode - Unknown device type" << std::endl;
+            return 0;
+        }
     }
 
-    phoXiDevice->MotionCam->MaintenanceMode = pho::api::PhoXiMaintenanceMode::Auto;
-    if (phoXiDevice->MotionCam->MaintenanceMode != pho::api::PhoXiMaintenanceMode::Auto)
-    {
-        std::cout << "Device does not support MaintenanceMode" << std::endl;
-        return 0;
-    }
     int frameID = phoXiDevice->TriggerFrame();
     pho::api::PFrame frame = phoXiDevice->GetSpecificFrame(frameID);
     if (frame)

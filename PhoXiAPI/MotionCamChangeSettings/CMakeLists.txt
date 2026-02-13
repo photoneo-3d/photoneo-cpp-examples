@@ -39,9 +39,6 @@ target_link_libraries(MotionCamChangeSettingsExample
     $<$<PLATFORM_ID:Linux>:rt>
 )
 
-get_target_property(ReleaseBinFolder MotionCamChangeSettingsExample RUNTIME_OUTPUT_DIRECTORY_RELEASE)
-get_target_property(DebugBinFolder MotionCamChangeSettingsExample RUNTIME_OUTPUT_DIRECTORY_DEBUG)
-
 if(MSVC)
     if(NOT PHOXI_DLL_FOR_EXAMPLE)
         set(PHOXI_DLL_FOR_EXAMPLE ${PHOXI_DLL})

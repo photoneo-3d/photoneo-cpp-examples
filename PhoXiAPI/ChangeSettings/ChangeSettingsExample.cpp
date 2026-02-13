@@ -141,7 +141,7 @@ void ChangeSettingsExample::ChangeCapturingSettingsExample()
     //CodingQuality values: Fast / High / Ultra
     PhoXiDevice->CapturingSettings->CodingQuality = "High";
 
-    //TextureSource values: Computed / LED / Laser / Focus
+    //TextureSource values: Computed / Computed (Enhanced) / LED / Laser / Laser (Enhanced) / Focus
     PhoXiDevice->CapturingSettings->TextureSource = "Laser";
 
     //SinglePatternExposure values: 10.24 / 14.336 / 20.48 / 24.576 / 30.72 / 34.816 / 40.96 / 49.152 / 75.776 / 79.872 / 90.112 / 100.352
@@ -173,6 +173,9 @@ void ChangeSettingsExample::ChangeCapturingSettingsExample()
 
     //HardwareTriggerSignal values: Falling / Rising / Both
     PhoXiDevice->CapturingSettings->HardwareTriggerSignal = pho::api::PhoXiHardwareTriggerSignal::Falling;
+
+    //HDR values: Off / Medium / Strong
+    PhoXiDevice->CapturingSettings->Hdr = pho::api::PhoXiHDR::Strong;
 
     //Retrieving the Changed Capturing Settings
     pho::api::PhoXiCapturingSettings ChangedCapturingSettings;
@@ -398,6 +401,7 @@ void ChangeSettingsExample::PrintCapturingSettings(const pho::api::PhoXiCapturin
     std::cout << "    LaserPower: "                 << CapturingSettings.LaserPower << std::endl;
     std::cout << "    LEDPower: "                   << CapturingSettings.LEDPower << std::endl;
     std::cout << "    ISO: "                        << CapturingSettings.Iso << std::endl;
+    std::cout << "    HDR: "                        << std::string(CapturingSettings.Hdr) << std::endl;
     std::cout << "    ProjectionOffsetLeft: "       << CapturingSettings.ProjectionOffsetLeft << std::endl;
     std::cout << "    ProjectionOffsetRight: "      << CapturingSettings.ProjectionOffsetRight << std::endl;
     std::cout << "    HardwareTrigger: "            << CapturingSettings.HardwareTrigger << std::endl;
