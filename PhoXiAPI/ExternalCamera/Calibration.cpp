@@ -33,15 +33,15 @@ CalibrationSettings CalibrationSettings::load() {
         settings.pixelSize = std::stod(line);
     }
 
-    settings.markersPositions = utils::Path::join(utils::Path::settingsFolder(), "MarkersPositions.txt");
+    settings.markerBoardRecipeFilePath = utils::Path::join(utils::Path::settingsFolder(), "MarkersPositions.txt");
 
     std::cout << "Loaded following settings:" << std::endl;
     std::cout << "	Focal length: "
             << settings.focalLength << " mm" << std::endl;
     std::cout << "	Pixel size: "
             << settings.pixelSize << " mm" << std::endl;
-    std::cout << "	Markers positions: "
-            << settings.markersPositions << std::endl << std::endl;
+    std::cout << "	Marker board recipe file path: "
+            << settings.markerBoardRecipeFilePath << std::endl << std::endl;
 
     return settings;
 }
@@ -59,7 +59,7 @@ pho::api::AdditionalCameraCalibration calibrate(
 
     std::string errorMessage;
     bool ok = Calibrator.Calibrate(frames, images, settings.focalLength,
-            settings.pixelSize, settings.markersPositions, calibration, &errorMessage);
+            settings.pixelSize, settings.markerBoardRecipeFilePath, calibration, &errorMessage);
 
     if (ok) {
         return calibration;

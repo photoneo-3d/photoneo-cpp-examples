@@ -12,7 +12,7 @@ namespace externalCamera {
 struct CalibrationSettings {
     double focalLength = 0;
     double pixelSize = 0;
-    std::string markersPositions = std::string();
+    std::string markerBoardRecipeFilePath;
 
     static CalibrationSettings load();
 };
