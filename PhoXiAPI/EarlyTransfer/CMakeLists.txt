@@ -1,7 +1,7 @@
 # CMakeLists files in this project can
 # refer to the root source directory of the project as ${EarlyTransferExample_SOURCE_DIR} and
 # to the root binary directory of the project as ${EarlyTransferExample_BINARY_DIR}.
-cmake_minimum_required (VERSION 3.11)
+cmake_minimum_required (VERSION 3.10)
 
 if(POLICY CMP0054)
     cmake_policy(SET CMP0054 NEW)

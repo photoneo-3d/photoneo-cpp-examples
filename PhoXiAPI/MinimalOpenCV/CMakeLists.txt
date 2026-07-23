@@ -15,6 +15,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_RELEASE_POSTFIX "_Release")
 set(CMAKE_DEBUG_POSTFIX "_Debug")
 
+if (UNIX)
+    add_compile_options(-pthread)
+endif(UNIX)
+
 add_executable(MinimalOpenCVExample
     MinimalOpenCVExample.cpp
 )

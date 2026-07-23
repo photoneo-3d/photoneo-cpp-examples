@@ -3,9 +3,11 @@
 *
 * Demonstrates the use of the Early Transfer feature that delivers the
 * ColorCameraImage as a separate frame as soon as possible.
-* 
-* Usage: EarlyTransferExample [-a] [-i <iterations>] [-e <colorExposure>] [-r <randomDelayBeforeTriggerMillis>]
+*
+* Usage: EarlyTransferExample [-X] [-a] [-i <iterations>] [-e <colorExposure>] [-r <randomDelayBeforeTriggerMillis>]
  * -a                 : Run the example with asynchronous frame grabbing (default is synchronous)
+ * -X                 : Don't use Early Transfer. Helpful to compare how Early Transfer affects the timing of the
+ *                      final full frame
  * -i <iterations>    : Number of frames to grab (default is 1)
  * -e <colorExposure> : Set the exposure of color camera (in ms) if present (default is to keep what is currently set)
  * -r <randomDelayBeforeTriggerMillis> : Wait for a random time before each trigger for up to this number of
@@ -58,6 +60,11 @@ struct Options {
     /// Wait for a random time before each trigger for up to
     /// this number of milliseconds.
     std::optional<int> randomDelayBeforeTriggerMillis = {};
+
+    /// Whether to actually use early transfer. Setting this
+    /// to false is helpful when comparing timing to "normal"
+    /// operation.
+    bool earlyTransfer = true;
 
     /// Parse these options from the given commandline.
     void parse(int argc, char *argv[]);
@@ -191,6 +198,9 @@ void Options::parse(int argc, char *argv[]) {
         if (opt == "-a") {
             async = true;
         }
+        else if (opt == "-X") {
+            earlyTransfer = false;
+        }
         else if (opt == "-i") {
             iterations = getIntArgument();
         }
@@ -206,6 +216,7 @@ void Options::parse(int argc, char *argv[]) {
 }
 
 std::ostream& operator<<(std::ostream&& os, Options o) {
+    os << "early transfer: " << (o.earlyTransfer ? "enabled" : "disabled") << "\n";
     os << "async: " << o.async << "\n";
     os << "iterations: " << o.iterations << "\n";
     os << "colorExposure: ";
@@ -253,10 +264,14 @@ std::ostream& operator<<(std::ostream& os, const Timer::millis_double& m)
 
 void setupDeviceForEarlyTransfer(pho::api::PPhoXi& PhoXiDevice, const Options& options)
 {
+    auto earlyTransfer = options.earlyTransfer
+        ? pho::api::PhoXiEarlyTransfer::ColorCameraImage
+        : pho::api::PhoXiEarlyTransfer::Off;
     if (PhoXiDevice->GetType() == pho::api::PhoXiDeviceType::PhoXiScanner)
-        PhoXiDevice->CapturingSettings->EarlyTransfer = pho::api::PhoXiEarlyTransfer::ColorCameraImage;
+        PhoXiDevice->CapturingSettings->EarlyTransfer = earlyTransfer;
     else
-        PhoXiDevice->MotionCam->EarlyTransfer = pho::api::PhoXiEarlyTransfer::ColorCameraImage;
+        PhoXiDevice->MotionCam->EarlyTransfer = earlyTransfer;
+
     PhoXiDevice->OutputSettings->SendColorCameraImage = true;
     PhoXiDevice->CoordinatesSettings->CameraSpace = pho::api::PhoXiCameraSpace::ColorCamera;
 
@@ -264,7 +279,9 @@ void setupDeviceForEarlyTransfer(pho::api::PPhoXi& PhoXiDevice, const Options& o
         PhoXiDevice->ColorSettings->Exposure = *options.colorExposure;
     }
 
-    std::cout << "Early Transfer feature was set" << std::endl;
+    std::cout << "Early Transfer feature was "
+        << (options.earlyTransfer ? "enabled" : "disabled")
+        << std::endl;
 
     std::cout << "Color Exposure: " << PhoXiDevice->ColorSettings->Exposure << "\n";
     std::cout << "Iterations: " << options.iterations << "\n";
@@ -319,7 +336,8 @@ void startSoftwareTriggerExample(pho::api::PPhoXi &PhoXiDevice, const Options& o
             std::cout << timer.elapsedMillis() << " Frame was triggered, Frame Id: " << FrameID << std::endl;
         }
 
-        for (const auto& pass : {"color", "full"}) {
+        auto expectedFrames = options.earlyTransfer ? std::vector{"color", "full"} : std::vector{"full"};
+        for (const auto& pass : expectedFrames) {
             std::cout <<"\n";
             std::cout << timer.elapsedMillis() << " Getting " << pass << " frame\n";
             pho::api::PFrame Frame = PhoXiDevice->GetSpecificFrame(FrameID++, pho::api::PhoXiTimeout::Infinity);
@@ -378,11 +396,12 @@ void startSoftwareTriggerAsyncGrabExample(pho::api::PPhoXi& PhoXiDevice, const O
     }
 
     timer.reset();
-    int FrameID = -1;
+    int finalFrameID = -1;
+
     for (int i = 0; i < options.iterations; ++i)
     {
         std::cout << timer.elapsedMillis() << " Triggering the " << i << "-th frame" << std::endl;
-        FrameID = PhoXiDevice->TriggerFrame();
+        int FrameID = PhoXiDevice->TriggerFrame();
         if (FrameID < 0)
         {
             // If negative number is returned trigger was unsuccessful
@@ -392,13 +411,22 @@ void startSoftwareTriggerAsyncGrabExample(pho::api::PPhoXi& PhoXiDevice, const O
         else
         {
             std::cout << timer.elapsedMillis() << " Frame was triggered, Frame Id: " << FrameID << std::endl;
+            finalFrameID = FrameID;
         }
     }
 
-    // Wait for last frame catched in callback
+    if (finalFrameID < 0) {
+        std::cout << "No frames were successfully triggered.\n";
+        return;
+    }
+
     // With Early Transfer feature, SW trigger currently returns the frame ID of the first
     // (rgb only) frame, so the final frame is FrameID + 1
-    while ((uint64_t)FrameID + 1 != AsyncFrameID) {
+    if (options.earlyTransfer)
+        finalFrameID += 1;
+
+    // Wait for last frame catched in callback
+    while (static_cast<uint64_t>(finalFrameID) != AsyncFrameID) {
         std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
     PhoXiDevice->StopAcquisition();

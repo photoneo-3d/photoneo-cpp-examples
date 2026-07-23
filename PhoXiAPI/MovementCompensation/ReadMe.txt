@@ -18,7 +18,7 @@ Prerequisites
 
 - Download movement_compensation_example_1.0.zip from 
 https://photoneo.com/files/dw/dw/pxc/API/movement_compensation_example_1.0.zip
-and extract it to MovementCompensationExample_CPP folder. This folder 
+and extract it to the MovementCompensation folder. This folder
 contains the data needed to run this example:
   - original.praw,
   - velocity.txt.

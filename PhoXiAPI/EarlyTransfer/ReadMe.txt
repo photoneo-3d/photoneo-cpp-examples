@@ -18,4 +18,26 @@ You will learn how to:
 * setting up the device to receive the Image as soon as possible
 * receive all data in two frames per scan.
 
+The example accepts a couple of commandline parameters that allow
+very simple benchmarking:
+
+  -i <iterations>
+    Run the capture <iterations> count.
+
+  -r <delay>
+    Wait a random time before each trigger up to <delay> number
+    of milliseconds.
+
+  -e <colorExposure>
+    Change the color camera exposure time.
+
+  -X
+    Don't use the Early Transfer feature. This makes it easier to
+    compare how Early Transfer affects the timing of the final full
+    frame with 3D data.
+
+  -a
+    Run the example with asynchronous (callback based) frame grabbing
+    (default is synchronous).
+
 ////////////////////////////////////////////////////////////////////////

@@ -16,15 +16,15 @@ Prerequisites
 -------------
 
 - Download external_camera_example_1.2.zip from https://photoneo.com/files/installer/PhoXi/api/external_camera_example_1.2.zip
-and extract it to ExternalCameraExample_CPP folder. This folder 
+and extract it to the ExternalCamera folder. This folder
 contains all needed data for testing of calibration using file camera.
-You need to have the Data folder present in ExternalCameraExample_CPP folder
+You need to have the Data folder present in the ExternalCamera folder
 before running CMake
-- Make sure you have opencv 3.1.0 installed on correct path:
+- Make sure you have OpenCV installed on the correct path (CMakeLists.txt
+  does not pin a specific version):
   - Windows: C:/opencv/
   - Linux: home/OpenCV/
   - Or modify CMake if you have it installed on different path
-  - You can also change opencv version on your own risk
 - CMake ExternalCameraExample
 
 

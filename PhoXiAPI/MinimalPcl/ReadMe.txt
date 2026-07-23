@@ -10,34 +10,23 @@ You will learn how to:
 * use Point Cloud Library in your project with PhoXi API,
 * convert scanned frame into PCL format.
 
-The project must  be correctly set up. In VisualStudio 2015 (for msvc14) or
-VisualStudio 2013 (for msvc12):
+How to build:
 
-Right click on your project → Properties → C/C++ → General → Additional Include
-Directories:
+1. Copy the MinimalPcl folder to a location with Read and Write
+   permissions (using the name <source>)
+2. Install the Point Cloud Library (PCL) so that it is discoverable by CMake's
+   find_package(PCL) (e.g. set PCL_DIR, or install it to a standard location)
+3. Open CMake
+   3.1. Set Source code to <source>
+   3.2. Set Binaries to <source>/_build or any other writable location
+   3.3. Click Configure and Generate
+4. Build project
+5. Run PhoXiControl
+   5.1. Connect to a scanner
+6. Run MinimalPclExample application
 
-  - C:\Program Files\PhotoneoPhoXiControl\API\include
-    - This is where our API headers are.
-  - <install-dir>\pcl-<ver>\include\pcl-<ver>
-    - You should find another pcl folder containing folders (2d, common,..)
-      and header files (cloud_iterator.h, conversions.h,...) in this directory.
-  - <install-dir>\eigen-<ver>
-    - This directory should contain Eigen folder which has a src folder and
-      files without extensions.
-  - <install-dir>\boost-<ver>
-    - This directory should contain a boost folder containing all the headers.
-
-Linker → General → Additional Library Directories:
-  - C:\Program Files\PhotoneoPhoXiControl\API\lib
-  - <install-dir>\pcl-<ver>\lib
-  - <install-dir>\boost-<ver>\lib64-msvc-14.0
-
-Linker → Input → Additional Dependencies:
-  - PhoXi_API_msvc14_Release_1.2.6.lib
-  - Pcl_common_release.lib
-
-<install-dir>	is a stand-in for path to a directory where PCL is installed
-             	on your computer.
-<ver>			is a stand-in for the version number of PCL you are going to use
+CMakeLists.txt links against the PCL::PCL imported target when available,
+falling back to PCL_COMMON_LIBRARIES otherwise, so no manual project property
+setup (include/library paths, explicit .lib names) is required.
 
 /////////////////////////////////////////////////////////////////////////////

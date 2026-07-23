@@ -7,6 +7,15 @@ the GigE Vision protocol.
 These examples require PhoXi firmware version 1.13.0.
 ⚠️
 
+## Examples
+
+- [`aravis/`](aravis/README.md) — C/C++ examples using the open-source
+  [aravis](https://github.com/AravisProject/aravis) framework.
+
+The rest of this document is the GenICam/GigE Vision reference vocabulary
+(components, trigger configuration, coordinate maps) that the examples above
+assume without re-explaining — read it once before working through them.
+
 ## GenICam Features
 
 When using a GigE Vision framework, most of the interaction with the device will
@@ -115,7 +124,7 @@ formats:
   color data in the lowest bits of the intensity.This allows for faster transfer
   speeds while allowing the reconstruction of 10 bit RGB information.
   See
-  [`common/YCoCg.h`](https://github.com/photoneo/photoneo-cpp-examples/tree/main/GigEVision/aravis/common/YCoCg.h)
+  [`common/YCoCg.h`](https://github.com/photoneo-3d/photoneo-cpp-examples/blob/main/GigEV/aravis/common/YCoCg.h)
   in C++ examples for more details on the encoding and an example implementation.
 
 

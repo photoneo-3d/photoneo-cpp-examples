@@ -1,16 +1,20 @@
-cmake_minimum_required (VERSION 3.24)
+cmake_minimum_required (VERSION 3.10)
 
 project (CAPI LANGUAGES C)
 
 set(CMAKE_RELEASE_POSTFIX "_Release")
 set(CMAKE_DEBUG_POSTFIX "_Debug")
 
+if (UNIX)
+    add_compile_options(-pthread)
+endif(UNIX)
+
 set(Files
     CAPIExample.c
     ReadMe.txt
 )
 
-add_executable (CAPIExample 
+add_executable (CAPIExample
     ${Files}
 )
 
@@ -24,6 +28,7 @@ endif()
 
 target_link_libraries(CAPIExample
     phoxi::phoxi
+    $<$<PLATFORM_ID:Linux>:rt>
 )
 
 if(MSVC)

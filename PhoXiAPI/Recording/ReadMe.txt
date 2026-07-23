@@ -12,7 +12,7 @@ You will learn how to:
 
 How to build:
 
-1. Copy Profiles folder to a location with Read and Write
+1. Copy the Recording folder to a location with Read and Write
    permissions (using the name <source>)
 2. Open CMake
    2.1. Set Source code to <source>
